@@ -14,8 +14,9 @@ WCHAR g_WindowName[100] = L"CGP600 - AE2";
 D3D_DRIVER_TYPE g_driverType = D3D_DRIVER_TYPE_NULL;
 D3D_FEATURE_LEVEL g_featureLevel = D3D_FEATURE_LEVEL_11_0;
 ID3D11Device* g_pD3DDevice = NULL;
-ID3D11DeviceContext* g_pImmediateContenxt = NULL;
+ID3D11DeviceContext* g_pImmediateContext = NULL;
 IDXGISwapChain* g_pSwapChain = NULL;
+ID3D11RenderTargetView* g_pBackBufferRTView = NULL;
 #pragma endregion
 
 #pragma region ForwardDeclarations
@@ -23,6 +24,7 @@ HRESULT InitialiseWindow(HINSTANCE hInstance, int nCmdShow);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT InitialiseD3D();
 void ShutdownD3D();
+void RenderFrame(void);
 #pragma endregion
 
 #pragma region EntryPoint
@@ -57,7 +59,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
         else
         {
-            // Do something
+            RenderFrame();
         }
     }
 
@@ -193,12 +195,40 @@ HRESULT InitialiseD3D()
     {
         g_driverType = driverTypes[driverTypeIndex];
         hr = D3D11CreateDeviceAndSwapChain(NULL, g_driverType, NULL, createDeviceFlags, featureLevels, numFeatureLevels,
-                                           D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pD3DDevice, &g_featureLevel, &g_pImmediateContenxt);
+                                           D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pD3DDevice, &g_featureLevel, &g_pImmediateContext);
 
         if (SUCCEEDED(hr)) { break; }
     }
 
     if (FAILED(hr)) { return hr; }
+
+    // Get pointer to back buffer texture
+    ID3D11Texture2D* pBackBufferTexture;
+    hr = g_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
+                                (LPVOID*)&pBackBufferTexture);
+
+    if (FAILED(hr)) { return hr; }
+
+    // Use the back buffer texture pointer to create the render target view
+    hr = g_pD3DDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &g_pBackBufferRTView);
+    pBackBufferTexture->Release();
+
+    if (FAILED(hr)) { return hr; }
+
+    // Set the render target view
+    g_pImmediateContext->OMSetRenderTargets(1, &g_pBackBufferRTView, NULL);
+
+    // Set the viewport
+    D3D11_VIEWPORT viewport;
+
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.Width = (FLOAT)width;
+    viewport.Height = (FLOAT)height;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+
+    g_pImmediateContext->RSSetViewports(1, &viewport);
 
     return S_OK;
 }
@@ -207,8 +237,23 @@ HRESULT InitialiseD3D()
 #pragma region ShutdownD3D
 void ShutdownD3D()
 {
+    if (g_pBackBufferRTView) { g_pBackBufferRTView->Release(); }
     if (g_pSwapChain) { g_pSwapChain->Release(); }
-    if (g_pImmediateContenxt) { g_pImmediateContenxt->Release(); }
+    if (g_pImmediateContext) { g_pImmediateContext->Release(); }
     if (g_pD3DDevice) { g_pD3DDevice->Release(); }
+}
+#pragma endregion
+
+#pragma region RenderFrame
+void RenderFrame(void)
+{
+    // Clear the back buffer - choose colour
+    float rgba_clear_colour[4] = { 0.1f, 0.2f, 0.6f, 1.0f };
+    g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, rgba_clear_colour);
+
+    // RENDER HERE
+
+    // Display what has just been rendered
+    g_pSwapChain->Present(0, 0);
 }
 #pragma endregion
