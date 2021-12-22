@@ -5,6 +5,14 @@
 #include <D3DX11.h>
 #include <windows.h>
 #include <dxerr.h>
+
+/* Use these defines when using DirectXMath
+   Make sure they are before the include */
+#define _XM_NO_INTRINSICS_
+#define XM_NO_ALIGNMENT
+#include <DirectXMath.h>
+
+using namespace DirectX;
 #pragma endregion
 
 #pragma region GlobalVars
@@ -17,6 +25,17 @@ ID3D11Device* g_pD3DDevice = NULL;
 ID3D11DeviceContext* g_pImmediateContext = NULL;
 IDXGISwapChain* g_pSwapChain = NULL;
 ID3D11RenderTargetView* g_pBackBufferRTView = NULL;
+ID3D11Buffer* g_pVertexBuffer;
+ID3D11VertexShader* g_pVertexShader;
+ID3D11PixelShader* g_pPixelShader;
+ID3D11InputLayout* g_pInputLayout;
+
+// Define vertex structure
+struct POS_COL_VERTEX
+{
+    XMFLOAT3 pos;
+    XMFLOAT4 col;
+};
 #pragma endregion
 
 #pragma region ForwardDeclarations
@@ -25,6 +44,7 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT InitialiseD3D();
 void ShutdownD3D();
 void RenderFrame(void);
+HRESULT InitialiseGraphics(void);
 #pragma endregion
 
 #pragma region EntryPoint
@@ -43,6 +63,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     if (FAILED(InitialiseD3D()))
     {
         DXTRACE_MSG(L"Failed to create device");
+        return 0;
+    }
+
+    if (FAILED(InitialiseGraphics()))
+    {
+        DXTRACE_MSG(L"Failed to initialise graphics");
         return 0;
     }
 
@@ -234,9 +260,108 @@ HRESULT InitialiseD3D()
 }
 #pragma endregion
 
+#pragma region InitialiseGraphics
+HRESULT InitialiseGraphics()
+{
+    HRESULT hr = S_OK;
+
+    // Define vertices of a triangle - screen coordinates -1.0 to +1.0
+    POS_COL_VERTEX vertices[] =
+    {
+        {XMFLOAT3(0.9f, 0.9f, 0.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
+        {XMFLOAT3(0.9f, -0.9f, 0.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
+        {XMFLOAT3(-0.9f, -0.9f, 0.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)}
+    };
+
+    // Set up and create vertex buffer
+    D3D11_BUFFER_DESC bufferDesc;
+    ZeroMemory(&bufferDesc, sizeof(bufferDesc));
+    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    bufferDesc.ByteWidth = sizeof(POS_COL_VERTEX) * 3;
+    bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    hr = g_pD3DDevice->CreateBuffer(&bufferDesc, NULL, &g_pVertexBuffer);
+
+    // Create the buffer
+    if (FAILED(hr)) { return hr; }
+
+    // Copy the vertices into the buffer
+    D3D11_MAPPED_SUBRESOURCE ms;
+
+    // Lock the buffer to allow writing
+    g_pImmediateContext->Map(g_pVertexBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);
+
+    // Copy the data
+    memcpy(ms.pData, vertices, sizeof(vertices));
+
+    // Unlock the buffer
+    g_pImmediateContext->Unmap(g_pVertexBuffer, NULL);
+
+    // Load and compile the pixel + vertex shaders - use vs_5_0 to target DX11 hardware only
+    ID3DBlob *VS, *PS, *error;
+    hr = D3DX11CompileFromFile(L"shaders.hlsl", 0, 0, "VShader", "vs_4_0", 0, 0, 0, &VS, &error, 0);
+
+    // Check for shader compilation error
+    if (error != 0)
+    {
+        OutputDebugStringA((char*)error->GetBufferPointer());
+        error->Release();
+
+        // Don't fail if error is just warning
+        if (FAILED(hr)) { return hr; }
+    }
+
+    hr = D3DX11CompileFromFile(L"shaders.hlhs", 0, 0, "PShader", "ps_4_0", 0, 0, 0, &PS, &error, 0);
+
+    // Check for shader compilation error
+    if (error != 0)
+    {
+        OutputDebugStringA((char*)error->GetBufferPointer());
+        error->Release();
+
+        // Don't fail if error is just a warning
+        if (FAILED(hr)) { return hr; }
+    }
+
+    // Create shader objects
+    hr = g_pD3DDevice->CreateVertexShader(VS->GetBufferPointer(), VS->GetBufferSize(), NULL, &g_pVertexShader);
+
+    if (FAILED(hr)) { return hr; }
+
+    hr = g_pD3DDevice->CreatePixelShader(VS->GetBufferPointer(), VS->GetBufferSize(), NULL, &g_pPixelShader);
+
+    if (FAILED(hr)) { return hr; }
+
+    // Set the shader objects as active
+    g_pImmediateContext->VSSetShader(g_pVertexShader, 0, 0);
+    g_pImmediateContext->PSSetShader(g_pPixelShader, 0, 0);
+
+    // Create and set the input layout object
+    D3D11_INPUT_ELEMENT_DESC iedesc[] =
+    {
+        // Be very careful setting the correct dxgi format and D3D version
+        // Note the spelling of COLOR
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+
+    hr = g_pD3DDevice->CreateInputLayout(iedesc, 2, VS->GetBufferPointer(), VS->GetBufferSize(), &g_pInputLayout);
+
+    if (FAILED(hr)) { return hr; }
+
+    g_pImmediateContext->IASetInputLayout(g_pInputLayout);
+
+    return S_OK;
+}
+#pragma endregion
+
 #pragma region ShutdownD3D
 void ShutdownD3D()
 {
+    if (g_pVertexBuffer) { g_pVertexBuffer->Release(); }
+    if (g_pInputLayout) { g_pInputLayout->Release(); }
+    if (g_pVertexShader) { g_pVertexShader->Release(); }
+    if (g_pPixelShader) { g_pPixelShader->Release(); }
     if (g_pBackBufferRTView) { g_pBackBufferRTView->Release(); }
     if (g_pSwapChain) { g_pSwapChain->Release(); }
     if (g_pImmediateContext) { g_pImmediateContext->Release(); }
@@ -251,7 +376,16 @@ void RenderFrame(void)
     float rgba_clear_colour[4] = { 0.1f, 0.2f, 0.6f, 1.0f };
     g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, rgba_clear_colour);
 
-    // RENDER HERE
+    // Set vertex buffer // 03 - 01
+    UINT stride = sizeof(POS_COL_VERTEX);
+    UINT offset = 0;
+    g_pImmediateContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
+
+    // Select which primitive type to use // 03 - 01
+    g_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // Draw the vertex buffer to the back buffer // 03 - 01
+    g_pImmediateContext->Draw(3, 0);
 
     // Display what has just been rendered
     g_pSwapChain->Present(0, 0);
