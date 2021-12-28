@@ -18,7 +18,7 @@ using namespace DirectX;
 #pragma region GlobalVars
 HINSTANCE g_hInst = NULL;
 HWND g_hWnd = NULL;
-WCHAR g_WindowName[100] = L"CGP600 - AE2";
+char g_WindowName[100] = "CGP600 - AE2";
 D3D_DRIVER_TYPE g_driverType = D3D_DRIVER_TYPE_NULL;
 D3D_FEATURE_LEVEL g_featureLevel = D3D_FEATURE_LEVEL_11_0;
 ID3D11Device* g_pD3DDevice = NULL;
@@ -29,12 +29,27 @@ ID3D11Buffer* g_pVertexBuffer;
 ID3D11VertexShader* g_pVertexShader;
 ID3D11PixelShader* g_pPixelShader;
 ID3D11InputLayout* g_pInputLayout;
+ID3D11Buffer* g_pConstantBuffer0;
 
 // Define vertex structure
 struct POS_COL_VERTEX
 {
     XMFLOAT3 pos;
     XMFLOAT4 col;
+};
+
+struct CONSTANT_BUFFER0
+{
+    // 64 bytes
+    XMMATRIX WorldViewProjection;
+    // 4 bytes
+    float RedAmount;
+    // 4 bytes
+    float scale;
+    // 2 x 4 bytes = 8 bytes
+    XMFLOAT3 packing_bytes;
+
+    // TOTAL SIZE = 80 bytes
 };
 #pragma endregion
 
@@ -56,19 +71,19 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
     if (FAILED(InitialiseWindow(hInstance, nCmdShow)))
     {
-        DXTRACE_MSG(L"Failed to create window");
+        DXTRACE_MSG("Failed to create window");
         return 0;
     }
 
     if (FAILED(InitialiseD3D()))
     {
-        DXTRACE_MSG(L"Failed to create device");
+        DXTRACE_MSG("Failed to create device");
         return 0;
     }
 
     if (FAILED(InitialiseGraphics()))
     {
-        DXTRACE_MSG(L"Failed to initialise graphics");
+        DXTRACE_MSG("Failed to initialise graphics");
         return 0;
     }
 
@@ -100,7 +115,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 HRESULT InitialiseWindow(HINSTANCE hInstance, int nCmdShow)
 {
     // Give app name
-    WCHAR Name[100] = L"CGP600 - AE2 Game\0";
+    char Name[100] = "CGP600 - AE2 Game\0";
 
     // Register class
     WNDCLASSEX wcex = { 0 };
@@ -229,7 +244,7 @@ HRESULT InitialiseD3D()
     if (FAILED(hr)) { return hr; }
 
     // Get pointer to back buffer texture
-    ID3D11Texture2D* pBackBufferTexture;
+    ID3D11Texture2D *pBackBufferTexture;
     hr = g_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
                                 (LPVOID*)&pBackBufferTexture);
 
@@ -280,9 +295,35 @@ HRESULT InitialiseGraphics()
     bufferDesc.ByteWidth = sizeof(POS_COL_VERTEX) * 3;
     bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    hr = g_pD3DDevice->CreateBuffer(&bufferDesc, NULL, &g_pVertexBuffer);
 
     // Create the buffer
+    hr = g_pD3DDevice->CreateBuffer(&bufferDesc, NULL, &g_pVertexBuffer);
+    
+    if (FAILED(hr)) { return hr; }
+
+    // Create constant buffer
+    D3D11_BUFFER_DESC constant_buffer_desc;
+    ZeroMemory(&constant_buffer_desc, sizeof(constant_buffer_desc));
+
+    // Can use UpdateSubresource() to update
+    constant_buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+    // MUST be a multiple of 16, calculate from CB struct
+    constant_buffer_desc.ByteWidth = 16;
+    // Use as a constant buffer
+    constant_buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+    hr = g_pD3DDevice->CreateBuffer(&constant_buffer_desc, NULL, &g_pConstantBuffer0);
+
+    CONSTANT_BUFFER0 cb0_values;
+
+    // 50% of vertex red value
+    cb0_values.RedAmount = 0.5f;
+
+    // Upload the new values for the constant buffer
+    g_pImmediateContext->UpdateSubresource(g_pConstantBuffer0, 0, 0, &cb0_values, 0, 0);
+
+    g_pImmediateContext->VSGetConstantBuffers(0, 1, &g_pConstantBuffer0);
+
     if (FAILED(hr)) { return hr; }
 
     // Copy the vertices into the buffer
@@ -299,7 +340,7 @@ HRESULT InitialiseGraphics()
 
     // Load and compile the pixel + vertex shaders - use vs_5_0 to target DX11 hardware only
     ID3DBlob *VS, *PS, *error;
-    hr = D3DX11CompileFromFile(L"shaders.hlsl", 0, 0, "VShader", "vs_4_0", 0, 0, 0, &VS, &error, 0);
+    hr = D3DX11CompileFromFile("shaders.hlsl", 0, 0, "VShader", "vs_4_0", 0, 0, 0, &VS, &error, 0);
 
     // Check for shader compilation error
     if (error != 0)
@@ -311,7 +352,7 @@ HRESULT InitialiseGraphics()
         if (FAILED(hr)) { return hr; }
     }
 
-    hr = D3DX11CompileFromFile(L"shaders.hlhs", 0, 0, "PShader", "ps_4_0", 0, 0, 0, &PS, &error, 0);
+    hr = D3DX11CompileFromFile("shaders.hlsl", 0, 0, "PShader", "ps_4_0", 0, 0, 0, &PS, &error, 0);
 
     // Check for shader compilation error
     if (error != 0)
@@ -328,7 +369,7 @@ HRESULT InitialiseGraphics()
 
     if (FAILED(hr)) { return hr; }
 
-    hr = g_pD3DDevice->CreatePixelShader(VS->GetBufferPointer(), VS->GetBufferSize(), NULL, &g_pPixelShader);
+    hr = g_pD3DDevice->CreatePixelShader(PS->GetBufferPointer(), PS->GetBufferSize(), NULL, &g_pPixelShader);
 
     if (FAILED(hr)) { return hr; }
 
@@ -358,6 +399,7 @@ HRESULT InitialiseGraphics()
 #pragma region ShutdownD3D
 void ShutdownD3D()
 {
+    if (g_pConstantBuffer0) { g_pConstantBuffer0->Release(); }
     if (g_pVertexBuffer) { g_pVertexBuffer->Release(); }
     if (g_pInputLayout) { g_pInputLayout->Release(); }
     if (g_pVertexShader) { g_pVertexShader->Release(); }
