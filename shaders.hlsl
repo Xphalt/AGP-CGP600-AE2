@@ -7,7 +7,7 @@ cbuffer CBuffer0
 	// 4 bytes
 	float scale;
 	// 2 x 4 bytes = 8 bytes
-	float3 packing;
+	float2 packing;
 
 	// TOTAL SIZE = 80 bytes
 };
@@ -23,7 +23,7 @@ VOut VShader(float4 position : POSITION, float4 color : COLOR)
 	VOut output;
 
 	color.r *= red_fraction;
-	output.position = position;
+	output.position = mul(WorldViewProjection, position);
 	output.color = color;
 
 	return output;

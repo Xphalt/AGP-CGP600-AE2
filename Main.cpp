@@ -16,21 +16,6 @@ using namespace DirectX;
 #pragma endregion
 
 #pragma region GlobalVars
-HINSTANCE g_hInst = NULL;
-HWND g_hWnd = NULL;
-char g_WindowName[100] = "CGP600 - AE2";
-D3D_DRIVER_TYPE g_driverType = D3D_DRIVER_TYPE_NULL;
-D3D_FEATURE_LEVEL g_featureLevel = D3D_FEATURE_LEVEL_11_0;
-ID3D11Device* g_pD3DDevice = NULL;
-ID3D11DeviceContext* g_pImmediateContext = NULL;
-IDXGISwapChain* g_pSwapChain = NULL;
-ID3D11RenderTargetView* g_pBackBufferRTView = NULL;
-ID3D11Buffer* g_pVertexBuffer;
-ID3D11VertexShader* g_pVertexShader;
-ID3D11PixelShader* g_pPixelShader;
-ID3D11InputLayout* g_pInputLayout;
-ID3D11Buffer* g_pConstantBuffer0;
-
 // Define vertex structure
 struct POS_COL_VERTEX
 {
@@ -47,10 +32,26 @@ struct CONSTANT_BUFFER0
     // 4 bytes
     float scale;
     // 2 x 4 bytes = 8 bytes
-    XMFLOAT3 packing_bytes;
+    XMFLOAT2 packing_bytes;
 
     // TOTAL SIZE = 80 bytes
 };
+
+HINSTANCE g_hInst = NULL;
+HWND g_hWnd = NULL;
+char g_WindowName[100] = "CGP600 - AE2";
+D3D_DRIVER_TYPE g_driverType = D3D_DRIVER_TYPE_NULL;
+D3D_FEATURE_LEVEL g_featureLevel = D3D_FEATURE_LEVEL_11_0;
+ID3D11Device* g_pD3DDevice = NULL;
+ID3D11DeviceContext* g_pImmediateContext = NULL;
+IDXGISwapChain* g_pSwapChain = NULL;
+ID3D11RenderTargetView* g_pBackBufferRTView = NULL;
+ID3D11Buffer* g_pVertexBuffer;
+ID3D11VertexShader* g_pVertexShader;
+ID3D11PixelShader* g_pPixelShader;
+ID3D11InputLayout* g_pInputLayout;
+ID3D11Buffer* g_pConstantBuffer0;
+CONSTANT_BUFFER0 cb0_values;
 #pragma endregion
 
 #pragma region ForwardDeclarations
@@ -308,21 +309,11 @@ HRESULT InitialiseGraphics()
     // Can use UpdateSubresource() to update
     constant_buffer_desc.Usage = D3D11_USAGE_DEFAULT;
     // MUST be a multiple of 16, calculate from CB struct
-    constant_buffer_desc.ByteWidth = 16;
+    constant_buffer_desc.ByteWidth = 80;
     // Use as a constant buffer
     constant_buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
     hr = g_pD3DDevice->CreateBuffer(&constant_buffer_desc, NULL, &g_pConstantBuffer0);
-
-    CONSTANT_BUFFER0 cb0_values;
-
-    // 50% of vertex red value
-    cb0_values.RedAmount = 0.5f;
-
-    // Upload the new values for the constant buffer
-    g_pImmediateContext->UpdateSubresource(g_pConstantBuffer0, 0, 0, &cb0_values, 0, 0);
-
-    g_pImmediateContext->VSGetConstantBuffers(0, 1, &g_pConstantBuffer0);
 
     if (FAILED(hr)) { return hr; }
 
@@ -392,6 +383,9 @@ HRESULT InitialiseGraphics()
 
     g_pImmediateContext->IASetInputLayout(g_pInputLayout);
 
+    // 50% of vertex red value
+    cb0_values.RedAmount = 0.5f;
+
     return S_OK;
 }
 #pragma endregion
@@ -425,6 +419,18 @@ void RenderFrame(void)
 
     // Select which primitive type to use // 03 - 01
     g_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    XMMATRIX projection, world, view;
+
+    world = XMMatrixRotationX(XMConvertToRadians(45));
+    world *= XMMatrixTranslation(0, 0, 5);
+    projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0), 640.0 / 480.0, 1.0, 100.0);
+    view = XMMatrixIdentity();
+    cb0_values.WorldViewProjection = world * view * projection;
+
+    g_pImmediateContext->UpdateSubresource(g_pConstantBuffer0, 0, 0, &cb0_values, 0, 0);
+
+    g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer0);
 
     // Draw the vertex buffer to the back buffer // 03 - 01
     g_pImmediateContext->Draw(3, 0);
