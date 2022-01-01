@@ -52,6 +52,7 @@ ID3D11PixelShader* g_pPixelShader;
 ID3D11InputLayout* g_pInputLayout;
 ID3D11Buffer* g_pConstantBuffer0;
 CONSTANT_BUFFER0 cb0_values;
+ID3D11DepthStencilView* g_pZBuffer;
 #pragma endregion
 
 #pragma region ForwardDeclarations
@@ -257,8 +258,36 @@ HRESULT InitialiseD3D()
 
     if (FAILED(hr)) { return hr; }
 
+    // Create a Z buffer texture
+    D3D11_TEXTURE2D_DESC tex2dDesc;
+    ZeroMemory(&tex2dDesc, sizeof(tex2dDesc));
+
+    tex2dDesc.Width = width;
+    tex2dDesc.Height = height;
+    tex2dDesc.ArraySize = 1;
+    tex2dDesc.MipLevels = 1;
+    tex2dDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    tex2dDesc.SampleDesc.Count = sd.SampleDesc.Count;
+    tex2dDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    tex2dDesc.Usage = D3D11_USAGE_DEFAULT;
+    
+    ID3D11Texture2D *pZBufferTexture;
+    hr = g_pD3DDevice->CreateTexture2D(&tex2dDesc, NULL, &pZBufferTexture);
+
+    if (FAILED(hr)) { return hr; }
+
+    // Create the Z buffer
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+    ZeroMemory(&dsvDesc, sizeof(dsvDesc));
+
+    dsvDesc.Format = tex2dDesc.Format;
+    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+
+    g_pD3DDevice->CreateDepthStencilView(pZBufferTexture, &dsvDesc, &g_pZBuffer);
+    pZBufferTexture->Release();
+
     // Set the render target view
-    g_pImmediateContext->OMSetRenderTargets(1, &g_pBackBufferRTView, NULL);
+    g_pImmediateContext->OMSetRenderTargets(1, &g_pBackBufferRTView, g_pZBuffer);
 
     // Set the viewport
     D3D11_VIEWPORT viewport;
@@ -281,19 +310,71 @@ HRESULT InitialiseGraphics()
 {
     HRESULT hr = S_OK;
 
+#pragma region Cube
     // Define vertices of a triangle - screen coordinates -1.0 to +1.0
     POS_COL_VERTEX vertices[] =
     {
-        {XMFLOAT3(0.9f, 0.9f, 0.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
-        {XMFLOAT3(0.9f, -0.9f, 0.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
-        {XMFLOAT3(-0.9f, -0.9f, 0.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)}
+        // Back face
+        {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
+        {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
+
+        {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
+        {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
+
+        // Front face
+        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
+        {XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
+
+        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
+        {XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
+        {XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
+
+        // Left face
+        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
+
+        {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
+
+        // Right face
+        {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
+
+        {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
+
+        // Bottom face
+        {XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
+
+        {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
+
+        // Top face
+        {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)},
+
+        {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)}
+        #pragma endregion
     };
 
     // Set up and create vertex buffer
     D3D11_BUFFER_DESC bufferDesc;
     ZeroMemory(&bufferDesc, sizeof(bufferDesc));
     bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-    bufferDesc.ByteWidth = sizeof(POS_COL_VERTEX) * 3;
+    bufferDesc.ByteWidth = sizeof(vertices);
     bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
@@ -393,6 +474,7 @@ HRESULT InitialiseGraphics()
 #pragma region ShutdownD3D
 void ShutdownD3D()
 {
+    if (g_pZBuffer) { g_pZBuffer->Release(); }
     if (g_pConstantBuffer0) { g_pConstantBuffer0->Release(); }
     if (g_pVertexBuffer) { g_pVertexBuffer->Release(); }
     if (g_pInputLayout) { g_pInputLayout->Release(); }
@@ -411,6 +493,7 @@ void RenderFrame(void)
     // Clear the back buffer - choose colour
     float rgba_clear_colour[4] = { 0.1f, 0.2f, 0.6f, 1.0f };
     g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, rgba_clear_colour);
+    g_pImmediateContext->ClearDepthStencilView(g_pZBuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
     // Set vertex buffer // 03 - 01
     UINT stride = sizeof(POS_COL_VERTEX);
@@ -420,20 +503,23 @@ void RenderFrame(void)
     // Select which primitive type to use // 03 - 01
     g_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    XMMATRIX projection, world, view;
+    XMMATRIX projection, world, view, world2;
 
-    world = XMMatrixRotationX(XMConvertToRadians(45));
-    world *= XMMatrixTranslation(0, 0, 5);
+    world = XMMatrixRotationX(XMConvertToRadians(60));
+    world *= XMMatrixTranslation(-10, 0, 20);
+    world2 = XMMatrixRotationX(XMConvertToRadians(60));
+    world2 *= XMMatrixTranslation(10, 0, 20);
     projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0), 640.0 / 480.0, 1.0, 100.0);
     view = XMMatrixIdentity();
     cb0_values.WorldViewProjection = world * view * projection;
+    cb0_values.WorldViewProjection = world2 * view * projection;
 
     g_pImmediateContext->UpdateSubresource(g_pConstantBuffer0, 0, 0, &cb0_values, 0, 0);
 
     g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer0);
 
     // Draw the vertex buffer to the back buffer // 03 - 01
-    g_pImmediateContext->Draw(3, 0);
+    g_pImmediateContext->Draw(36, 0);
 
     // Display what has just been rendered
     g_pSwapChain->Present(0, 0);
