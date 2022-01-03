@@ -5,6 +5,7 @@
 #include <D3DX11.h>
 #include <windows.h>
 #include <dxerr.h>
+#include "Camera.h"
 
 /* Use these defines when using DirectXMath
    Make sure they are before the include */
@@ -53,6 +54,7 @@ ID3D11InputLayout* g_pInputLayout;
 ID3D11Buffer* g_pConstantBuffer0;
 CONSTANT_BUFFER0 cb0_values;
 ID3D11DepthStencilView* g_pZBuffer;
+Camera* g_camera;
 #pragma endregion
 
 #pragma region ForwardDeclarations
@@ -467,6 +469,8 @@ HRESULT InitialiseGraphics()
     // 50% of vertex red value
     cb0_values.RedAmount = 0.5f;
 
+    g_camera = new Camera(0.0, 0.0, -0.5, 0);
+
     return S_OK;
 }
 #pragma endregion
@@ -474,6 +478,7 @@ HRESULT InitialiseGraphics()
 #pragma region ShutdownD3D
 void ShutdownD3D()
 {
+    if (g_camera) { delete g_camera; }
     if (g_pZBuffer) { g_pZBuffer->Release(); }
     if (g_pConstantBuffer0) { g_pConstantBuffer0->Release(); }
     if (g_pVertexBuffer) { g_pVertexBuffer->Release(); }
@@ -502,6 +507,8 @@ void RenderFrame(void)
 
     // Select which primitive type to use // 03 - 01
     g_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    g_camera->GetViewMatrix();
 
     XMMATRIX projection, world, view, world2;
 
