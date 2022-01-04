@@ -15,6 +15,7 @@ private:
 	float m_dx, m_dy, m_dz;
 	float m_camera_rotation;
 	XMVECTOR m_position, m_lookat, m_up;
+	float m_stepAmount;
 
 public:
 	Camera(float _initialXPos, float _initialYPos, float _intitialZPos, float _initialCameraRotation);
@@ -23,4 +24,5 @@ public:
 	void Forward(float _distance);
 	void Up(float _distance);
 	XMMATRIX GetViewMatrix();
+	void Strafe(float _distance);
 };

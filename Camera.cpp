@@ -28,11 +28,27 @@ void Camera::Up(float _distance)
 
 XMMATRIX Camera::GetViewMatrix()
 {
-	XMVECTOR position = XMVectorSet(0.0, 0.0, -5.0, 0.0);
-	XMVECTOR lookat = XMVectorSet(0.0, 0.0, -4.0, 0.0);
+	XMVECTOR position = XMVectorSet(m_x, m_y, m_z, 0.0);
+	XMVECTOR lookat = XMVectorSet(m_x + m_dx, m_y, m_z + m_dz, 0.0);
 	XMVECTOR up = XMVectorSet(0.0, 1.0, 0.0, 0.0);
 
 	XMMATRIX view = XMMatrixLookAtLH(position, lookat, up);
 
 	return view;
+}
+
+void Camera::Strafe(float _distance)
+{
+	/* Calculate forward vector, which is calculated from
+	2 normalised points we know: lookat minus position */
+	XMVECTOR forward = XMVector3Normalize();
+
+	/* Calculate right vector, which is a normalised
+	perpendicular vector to forward and up */
+	//XMVECTOR right = ;
+
+	/* Update m_xand m_z, by multiplying right xand z by
+	distance */
+	m_x += m_dx * _distance;
+	m_z += m_dz * _distance;
 }
