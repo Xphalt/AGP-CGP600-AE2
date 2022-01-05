@@ -11,19 +11,19 @@ Camera::Camera(float _initialXPos, float _initialYPos, float _intitialZPos, floa
 void Camera::Rotate(float _rotation)
 {
 	m_camera_rotation = _rotation;
-	m_dx = sin(m_camera_rotation * (XM_PI / 180.0));
-	m_dz = cos(m_camera_rotation * (XM_PI / 180.0));
+	m_dx = XMConvertToRadians(sin(m_camera_rotation));
+	m_dz = XMConvertToRadians(cos(m_camera_rotation));
 }
 
 void Camera::Forward(float _distance)
 {
-	m_x = m_dx * _distance;
-	m_z = m_dz * _distance;
+	m_x += m_dx * _distance;
+	m_z += m_dz * _distance;
 }
 
 void Camera::Up(float _distance)
 {
-	m_y = m_dy * _distance;
+	m_y += _distance;
 }
 
 XMMATRIX Camera::GetViewMatrix()
@@ -41,11 +41,11 @@ void Camera::Strafe(float _distance)
 {
 	/* Calculate forward vector, which is calculated from
 	2 normalised points we know: lookat minus position */
-	//XMVECTOR forward = XMVector3Normalize();
+	XMVECTOR forward = XMVector3Normalize(m_lookat - m_position);
 
 	/* Calculate right vector, which is a normalised
 	perpendicular vector to forward and up */
-	//XMVECTOR right = ;
+	XMVECTOR right = XMVector3Normalize(XMVector3Cross(forward, m_up));
 
 	/* Update m_xand m_z, by multiplying right xand z by
 	distance */
