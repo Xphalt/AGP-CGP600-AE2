@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <dxerr.h>
 #include "Camera.h"
+#include "text2D.h"
 
 /* Use these defines when using DirectXMath
    Make sure they are before the include */
@@ -18,10 +19,11 @@ using namespace DirectX;
 
 #pragma region GlobalVars
 // Define vertex structure
-struct POS_COL_VERTEX
+struct POS_COL_TEX_VERTEX
 {
     XMFLOAT3 pos;
     XMFLOAT4 col;
+    XMFLOAT2 texture0;
 };
 
 struct CONSTANT_BUFFER0
@@ -55,6 +57,13 @@ ID3D11Buffer* g_pConstantBuffer0;
 CONSTANT_BUFFER0 cb0_values;
 ID3D11DepthStencilView* g_pZBuffer;
 Camera* g_camera;
+ID3D11ShaderResourceView* g_pTexture0;
+ID3D11SamplerState* g_pSampler0;
+Text2D* g_2DText;
+ID3D11BlendState* g_pAlphaBlendEnable;
+ID3D11BlendState* g_pAlphaBlendDisable;
+ID3D11RasterizerState* rastStateCullNone;
+ID3D11RasterizerState* rastStateCullBack;
 #pragma endregion
 
 #pragma region ForwardDeclarations
@@ -303,6 +312,47 @@ HRESULT InitialiseD3D()
 
     g_pImmediateContext->RSSetViewports(1, &viewport);
 
+    g_2DText = new Text2D("assets/font1.png", g_pD3DDevice, g_pImmediateContext);
+
+    D3D11_BLEND_DESC b;
+    b.RenderTarget[0].BlendEnable = TRUE;
+    b.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    b.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC1_ALPHA;
+    b.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    b.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    b.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    b.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    b.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    b.IndependentBlendEnable = FALSE;
+    b.AlphaToCoverageEnable = FALSE;
+
+    g_pD3DDevice->CreateBlendState(&b, &g_pAlphaBlendEnable);
+
+    D3D11_RASTERIZER_DESC rdesc;
+    ZeroMemory(&rdesc, sizeof(D3D11_RASTERIZER_DESC));
+    rdesc.FillMode = D3D11_FILL_SOLID;
+    rdesc.CullMode = D3D11_CULL_NONE;
+    rdesc.FrontCounterClockwise = false;
+    rdesc.DepthBias = false;
+    rdesc.DepthBiasClamp = 0;
+    rdesc.SlopeScaledDepthBias = 0;
+    rdesc.DepthClipEnable = true;
+    rdesc.MultisampleEnable = true;
+    rdesc.AntialiasedLineEnable = true;
+
+    hr = g_pD3DDevice->CreateRasterizerState(&rdesc, &rastStateCullNone);
+    ZeroMemory(&rdesc, sizeof(D3D11_RASTERIZER_DESC));
+    rdesc.FillMode = D3D11_FILL_SOLID;
+    rdesc.CullMode = D3D11_CULL_NONE;
+    rdesc.FrontCounterClockwise = false;
+    rdesc.DepthBias = false;
+    rdesc.DepthBiasClamp = 0;
+    rdesc.SlopeScaledDepthBias = 0;
+    rdesc.DepthClipEnable = true;
+    rdesc.MultisampleEnable = false;
+    rdesc.AntialiasedLineEnable = false;
+    hr = g_pD3DDevice->CreateRasterizerState(&rdesc, &rastStateCullBack);
+
     return S_OK;
 }
 #pragma endregion
@@ -314,63 +364,59 @@ HRESULT InitialiseGraphics()
 
 #pragma region Cube
     // Define vertices of a triangle - screen coordinates -1.0 to +1.0
-    POS_COL_VERTEX vertices[] =
+    POS_COL_TEX_VERTEX vertices[] =
     {
         // Back face
-        {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
-        {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
-
-        {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
-        {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, 1.0f),   XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, 1.0f),  XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
+        {XMFLOAT3(1.0f, 1.0f, 1.0f),    XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+        {XMFLOAT3(1.0f, 1.0f, 1.0f),    XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, 1.0f),  XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
+        {XMFLOAT3(1.0f, -1.0f, 1.0f),   XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
 
         // Front face
-        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
-        {XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
-
-        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
-        {XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
-        {XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
-
-        // Left face
-        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
-
-        {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, -1.0f),  XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+        {XMFLOAT3(1.0f, 1.0f, -1.0f),   XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
+        {XMFLOAT3(1.0f, 1.0f, -1.0f),   XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+        {XMFLOAT3(1.0f, -1.0f, -1.0f),  XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
+                                        
+        // Left face                    
+        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, 1.0f),  XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, -1.0f),  XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, 1.0f),  XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, 1.0f),   XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, -1.0f),  XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
 
         // Right face
-        {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
-
-        {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(1.0f, -1.0f, 1.0f),   XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+        {XMFLOAT3(1.0f, -1.0f, -1.0f),  XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
+        {XMFLOAT3(1.0f, 1.0f, -1.0f),   XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
+        {XMFLOAT3(1.0f, 1.0f, 1.0f),    XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+        {XMFLOAT3(1.0f, -1.0f, 1.0f),   XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+        {XMFLOAT3(1.0f, 1.0f, -1.0f),   XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
 
         // Bottom face
-        {XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
-
-        {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f)},
+        {XMFLOAT3(1.0f, -1.0f, -1.0f),  XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
+        {XMFLOAT3(1.0f, -1.0f, 1.0f),   XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
+        {XMFLOAT3(1.0f, -1.0f, 1.0f),   XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, 1.0f),  XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+        {XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
 
         // Top face
-        {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)},
-
-        {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)},
-        {XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f)}
+        {XMFLOAT3(1.0f, 1.0f, 1.0f),    XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+        {XMFLOAT3(1.0f, 1.0f, -1.0f),   XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, -1.0f),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, 1.0f),   XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+        {XMFLOAT3(1.0f, 1.0f, 1.0f),    XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+        {XMFLOAT3(-1.0f, 1.0f, -1.0f),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)}
         #pragma endregion
     };
+
+    D3DX11CreateShaderResourceViewFromFile(g_pD3DDevice, "assets/BoxTexture.bmp", NULL, NULL, &g_pTexture0, NULL);
 
     // Set up and create vertex buffer
     D3D11_BUFFER_DESC bufferDesc;
@@ -379,6 +425,17 @@ HRESULT InitialiseGraphics()
     bufferDesc.ByteWidth = sizeof(vertices);
     bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+    // Set up and create the sample state
+    D3D11_SAMPLER_DESC sampler_desc;
+    ZeroMemory(&sampler_desc, sizeof(sampler_desc));
+    sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    g_pD3DDevice->CreateSamplerState(&sampler_desc, &g_pSampler0);
 
     // Create the buffer
     hr = g_pD3DDevice->CreateBuffer(&bufferDesc, NULL, &g_pVertexBuffer);
@@ -447,10 +504,6 @@ HRESULT InitialiseGraphics()
 
     if (FAILED(hr)) { return hr; }
 
-    // Set the shader objects as active
-    g_pImmediateContext->VSSetShader(g_pVertexShader, 0, 0);
-    g_pImmediateContext->PSSetShader(g_pPixelShader, 0, 0);
-
     // Create and set the input layout object
     D3D11_INPUT_ELEMENT_DESC iedesc[] =
     {
@@ -458,13 +511,12 @@ HRESULT InitialiseGraphics()
         // Note the spelling of COLOR
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
-    hr = g_pD3DDevice->CreateInputLayout(iedesc, 2, VS->GetBufferPointer(), VS->GetBufferSize(), &g_pInputLayout);
+    hr = g_pD3DDevice->CreateInputLayout(iedesc, ARRAYSIZE(iedesc), VS->GetBufferPointer(), VS->GetBufferSize(), &g_pInputLayout);
 
     if (FAILED(hr)) { return hr; }
-
-    g_pImmediateContext->IASetInputLayout(g_pInputLayout);
 
     // 50% of vertex red value
     cb0_values.RedAmount = 0.5f;
@@ -478,6 +530,10 @@ HRESULT InitialiseGraphics()
 #pragma region ShutdownD3D
 void ShutdownD3D()
 {
+
+    if (g_2DText) { delete g_2DText; };
+    if (g_pTexture0) { g_pTexture0->Release(); }
+    if (g_pSampler0) { g_pSampler0->Release(); }
     if (g_camera) { delete g_camera; }
     if (g_pZBuffer) { g_pZBuffer->Release(); }
     if (g_pConstantBuffer0) { g_pConstantBuffer0->Release(); }
@@ -501,13 +557,16 @@ void RenderFrame(void)
     g_pImmediateContext->ClearDepthStencilView(g_pZBuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
     // Set vertex buffer // 03 - 01
-    UINT stride = sizeof(POS_COL_VERTEX);
+    UINT stride = sizeof(POS_COL_TEX_VERTEX);
     UINT offset = 0;
     g_pImmediateContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
 
     // Select which primitive type to use // 03 - 01
     g_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+    g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer0);
+    g_pImmediateContext->VSSetShader(g_pVertexShader, 0, 0);
+    g_pImmediateContext->PSSetShader(g_pPixelShader, 0, 0);
+    g_pImmediateContext->IASetInputLayout(g_pInputLayout);
     g_camera->GetViewMatrix();
 
     XMMATRIX projection, world, view, world2;
@@ -525,8 +584,20 @@ void RenderFrame(void)
 
     g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer0);
 
+    // Use texture and sample states
+    g_pImmediateContext->PSSetSamplers(0, 1, &g_pSampler0);
+    g_pImmediateContext->PSSetShaderResources(0, 1, &g_pTexture0);
+
+    g_pImmediateContext->RSSetState(rastStateCullBack);
+
     // Draw the vertex buffer to the back buffer // 03 - 01
     g_pImmediateContext->Draw(36, 0);
+    g_pImmediateContext->RSSetState(rastStateCullNone);
+
+    g_2DText->AddText("Some Text", -1.0, +1.0, .2);
+    g_pImmediateContext->OMSetBlendState(g_pAlphaBlendEnable, 0, 0xffffffff);
+    g_2DText->RenderText();
+    g_pImmediateContext->OMSetBlendState(g_pAlphaBlendDisable, 0, 0xffffffff);
 
     // Display what has just been rendered
     g_pSwapChain->Present(0, 0);

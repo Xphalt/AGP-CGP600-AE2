@@ -41,7 +41,7 @@ void Camera::Strafe(float _distance)
 {
 	/* Calculate forward vector, which is calculated from
 	2 normalised points we know: lookat minus position */
-	XMVECTOR forward = XMVector3Normalize();
+	//XMVECTOR forward = XMVector3Normalize();
 
 	/* Calculate right vector, which is a normalised
 	perpendicular vector to forward and up */
