@@ -6,6 +6,10 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectX_Game", "DirectX_Game.vcxproj", "{14284B2B-955C-40C3-83DF-92B387CA4C3B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D6087C4A-89AE-4D74-9C48-649E4AA5E221}"
+	ProjectSection(SolutionItems) = preProject
+		objfilemodel.cpp = objfilemodel.cpp
+		objfilemodel.h = objfilemodel.h
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
