@@ -1,3 +1,4 @@
+#pragma once
 #include "StringConverter.h"
 
 std::wstring StringConverter::StringToWide(std::string _string)
