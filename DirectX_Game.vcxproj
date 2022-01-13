@@ -190,8 +190,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Game.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GraphicsComponent.h" />
+    <ClInclude Include="InitDirectX.h" />
     <ClInclude Include="InputComponent.h" />
     <ClInclude Include="Lighting.h" />
     <ClInclude Include="Model.h" />
@@ -201,11 +203,14 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="text2D.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="RenderWindow.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GraphicsComponent.cpp" />
+    <ClCompile Include="InitDirectX.cpp" />
     <ClCompile Include="InputComponent.cpp" />
     <ClCompile Include="Lighting.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -216,6 +221,7 @@
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="text2D.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="RenderWindow.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

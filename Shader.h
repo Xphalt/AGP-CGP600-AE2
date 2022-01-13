@@ -1,9 +1,15 @@
 #pragma once
 
+class GameObject;
+
 class Shader
 {
-private:
-
 public:
+	Shader();
+	~Shader();
+
+	void Update(GameObject& _gameObject);
+
+private:
 
 };

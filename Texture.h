@@ -1,9 +1,15 @@
 #pragma once
 
+class GameObject;
+
 class Texture
 {
-private:
-
 public:
+	Texture();
+	~Texture();
+
+	void Update(GameObject& _gameObject);
+
+private:
 
 };
