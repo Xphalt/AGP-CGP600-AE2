@@ -1,22 +1,17 @@
 #pragma once
-#include "ErrorLogger.h"
+#include <d3d11.h>
+#define _XM_NO_INTRINSICS_
+#define XM_NO_ALIGNMENT
+#include <DirectXMath.h>
+#include <string>
+
+using namespace DirectX;
 
 class RenderWindow
 {
 public:
-	RenderWindow(HINSTANCE _hInstance, std::string _windowTitle, std::string _windowClass, int _width, int _height);;
-	~RenderWindow();
-	bool InitialiseWindow();
-	bool ProccessMessages();
+	RenderWindow(LPCSTR _windowName, HWND _hWnd, HINSTANCE _hInstance, int _nCmdShow);
 
 private:
-	void RegisterWindowClass();
-	HWND m_handle = { NULL };
-	HINSTANCE m_hInstance = { NULL };
-	std::string m_windowTitle = { "" };
-	std::wstring m_windowTitleWide = { L"" };
-	std::string m_windowClass = { "" };
-	std::wstring m_windowClassWide = { L"" };
-	int m_width = { 0 };
-	int m_height = { 0 };
+	HRESULT InitialiseWindow(LPCSTR _windowName, HWND _hWnd, HINSTANCE hInstance, int nCmdShow);
 };
