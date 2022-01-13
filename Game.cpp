@@ -12,6 +12,7 @@ Game::Game()
 
 Game::~Game()
 {
+	if (m_pGraphics == nullptr) { delete m_pGraphics; m_pGraphics = { nullptr }; }
 	if (m_pRenderWindow == nullptr) { delete m_pRenderWindow; m_pRenderWindow = { nullptr }; }
 	if (m_pInitDirectX == nullptr) { delete m_pInitDirectX; m_pInitDirectX = { nullptr }; }
 }
