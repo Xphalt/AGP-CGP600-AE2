@@ -27,6 +27,7 @@ public:
 	~GraphicsComponent();
 
 	void Update(GameObject& _gameObject);
+	InitDirectX* GetInitDirectX() const { return m_pInitDirectX; }
 
 private:
 	InitDirectX* m_pInitDirectX{ nullptr };

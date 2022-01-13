@@ -1,8 +1,11 @@
 #pragma once
-#include <windows.h>
+#include "InitDirectX.h"
+#include "RenderWindow.h"
+#include "GraphicsComponent.h"
 
 class InitDirectX;
 class RenderWindow;
+class GraphicsComponent;
 
 class Game
 {
@@ -14,6 +17,7 @@ public:
 private:
 	InitDirectX* m_pInitDirectX{ nullptr };
 	RenderWindow* m_pRenderWindow{ nullptr };
+	GraphicsComponent* m_pGraphics{ nullptr };
 
 	const LPCSTR m_windowName{ "Test" };
 	HWND m_hwnd{ NULL };
