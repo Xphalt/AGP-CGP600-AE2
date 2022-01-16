@@ -13,6 +13,4 @@ public:
 private:
 	static RenderWindow s_instance;
 	RenderWindow() {};
-
-	HWND m_hwnd{ NULL };
 };

@@ -3,11 +3,11 @@
 
 InitDirectX InitDirectX::s_instance;
 
-HRESULT InitDirectX::Initialise(HWND _hwnd)
+HRESULT InitDirectX::Initialise()
 {
     HRESULT hr{S_OK};
 
-    InitialiseDirectX(_hwnd, hr);
+    InitialiseDirectX(hr);
 
     InitialiseShaders();
 
@@ -16,11 +16,11 @@ HRESULT InitDirectX::Initialise(HWND _hwnd)
     return S_OK;
 }
 
-HRESULT InitDirectX::InitialiseDirectX(const HWND& _hwnd, HRESULT& hr)
+HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
 {
 #pragma region Initialise drivers
     RECT rc;
-    GetClientRect(_hwnd, &rc);
+    GetClientRect(Renderer::GetInstance().GetHWND(), &rc);
     UINT width = rc.right - rc.left;
     UINT height = rc.bottom - rc.top;
 
@@ -60,7 +60,7 @@ HRESULT InitDirectX::InitialiseDirectX(const HWND& _hwnd, HRESULT& hr)
     scd.BufferDesc.RefreshRate.Numerator = 60;
     scd.BufferDesc.RefreshRate.Denominator = 1;
     scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    scd.OutputWindow = _hwnd;
+    scd.OutputWindow = Renderer::GetInstance().GetHWND();
     scd.SampleDesc.Count = 1;
     scd.SampleDesc.Quality = 0;
     scd.Windowed = true;
@@ -72,53 +72,53 @@ HRESULT InitDirectX::InitialiseDirectX(const HWND& _hwnd, HRESULT& hr)
         hr = D3D11CreateDeviceAndSwapChain
         (
             NULL,
-            GetDriverType(),
+            *GetDriverType(),
             NULL,
             createDeviceFlags,
             featureLevels,
             numFeatureLevels,
             D3D11_SDK_VERSION,
             &scd,
-            (IDXGISwapChain**)m_rRenderer.GetSwapChain(),
-            (ID3D11Device**)m_rRenderer.GetDevice(),
-            (D3D_FEATURE_LEVEL*)GetFeatureLevel(),
-            (ID3D11DeviceContext**)m_rRenderer.GetDeviceContext()
+            &Renderer::GetInstance().GetSwapChain(),
+            &Renderer::GetInstance().GetDevice(),
+            GetFeatureLevel(),
+            &Renderer::GetInstance().GetDeviceContext()
         );
 
         if (SUCCEEDED(hr)) { break; }
     }
 
-    if (FAILED(hr)) { DXTRACE_MSG("Failed to create device and swap chain."); return hr; }
+    if (FAILED(hr)) { return hr; }
 #pragma endregion
 
 #pragma region Create and set back buffer
     ID3D11Texture2D* pBackBuffer;
-    hr = m_rRenderer.GetSwapChain()->GetBuffer
+    hr = Renderer::GetInstance().GetSwapChain()->GetBuffer
     (
         0,
         __uuidof(ID3D11Texture2D),
         (LPVOID*)&pBackBuffer
     );
 
-    if (FAILED(hr)) { DXTRACE_MSG("Failed to create back buffer."); return hr; }
+    if (FAILED(hr)) { return hr; }
 #pragma endregion
 
 #pragma region Create and set render target view
-    hr = m_rRenderer.GetDevice()->CreateRenderTargetView
+    hr = Renderer::GetInstance().GetDevice()->CreateRenderTargetView
     (
         pBackBuffer,
         NULL,
-        (ID3D11RenderTargetView**)m_rRenderer.GetRenderTargetView()
+        &Renderer::GetInstance().GetRenderTargetView()
     );
 
     pBackBuffer->Release();
 
-    if (FAILED(hr)) { DXTRACE_MSG("Failed to create render target view."); return hr; }
+    if (FAILED(hr)) { return hr; }
 
-    m_rRenderer.GetDeviceContext()->OMSetRenderTargets
+    Renderer::GetInstance().GetDeviceContext()->OMSetRenderTargets
     (
         1,
-        (ID3D11RenderTargetView**)m_rRenderer.GetRenderTargetView(),
+        &Renderer::GetInstance().GetRenderTargetView(),
         NULL
     );
 #pragma endregion
@@ -133,7 +133,9 @@ HRESULT InitDirectX::InitialiseDirectX(const HWND& _hwnd, HRESULT& hr)
     viewport.MinDepth = 0.0f;
     viewport.MaxDepth = 1.0f;
 
-    m_rRenderer.GetDeviceContext()->RSSetViewports(1, &viewport);
+    Renderer::GetInstance().GetDeviceContext()->RSSetViewports(1, &viewport);
+
+    return hr;
 #pragma endregion
 }
 
@@ -146,8 +148,8 @@ void InitDirectX::InitialiseShaders()
 
     UINT numElements = ARRAYSIZE(layout);
 
-    m_rRenderer.GetShaders()->InitialiseVertexShader(m_rRenderer.GetDevice(), L"VertexShader.cso", layout, numElements);
-    m_rRenderer.GetShaders()->InitialisePixelShader(m_rRenderer.GetDevice(), L"PixelShader.cso", layout, numElements);
+    Renderer::GetInstance().GetShaders()->InitialiseVertexShader(L"VertexShader.cso", layout, numElements);
+    Renderer::GetInstance().GetShaders()->InitialisePixelShader(L"PixelShader.cso", layout, numElements);
 }
 
 void InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
@@ -173,5 +175,5 @@ void InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
     ZeroMemory(&vertexBufferData, sizeof(vertexBufferData));
     vertexBufferData.pSysMem = vertex;
 
-    hr = m_rRenderer.GetDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, (ID3D11Buffer**)m_rRenderer.GetVertexBuffer());
+    hr = Renderer::GetInstance().GetDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &Renderer::GetInstance().GetVertexBuffer());
 }

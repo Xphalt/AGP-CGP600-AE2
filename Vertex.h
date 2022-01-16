@@ -1,5 +1,5 @@
 #pragma once
-#include <DirectXMath.h>
+#include "Renderer.h"
 
 struct Vertex
 {
