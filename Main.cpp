@@ -1,29 +1,17 @@
+#include "RenderWindow.h"
 #include "Game.h"
+#include <d3d11.h>
 
-using namespace DirectX;
+int APIENTRY wWinMain(_In_ HINSTANCE _hInstance, _In_opt_ HINSTANCE _hPrevInstance,	_In_ LPWSTR _lpCmdLine,	_In_ int _nCmdShow)
 
-int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
-    Game game;
+	RenderWindow::GetInstance().Initialise(_hInstance, "Title", "MyWindowClass", 800, 600);
+	Game* game = new Game();
 
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
+	while (RenderWindow::GetInstance().ProccessMessages() == true)
+	{
+		game->Update();
+	}
 
-    MSG msg = { 0 };
-
-    while (msg.message != WM_QUIT)
-    {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-
-        else
-        {
-            
-        }
-    }
-
-    return (int)msg.wParam;
+	return 0;
 }

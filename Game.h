@@ -1,26 +1,22 @@
 #pragma once
+#include "Renderer.h"
 #include "InitDirectX.h"
 #include "RenderWindow.h"
-#include "GraphicsComponent.h"
 
+class Renderer;
 class InitDirectX;
-class RenderWindow;
-class GraphicsComponent;
 
 class Game
 {
 public:
 	Game();
 	~Game();
+
 	void Update();
 
 private:
-	InitDirectX* m_pInitDirectX{ nullptr };
-	RenderWindow* m_pRenderWindow{ nullptr };
-	GraphicsComponent* m_pGraphics{ nullptr };
+	Renderer& m_rRenderer{ Renderer::GetInstance() };
+	InitDirectX& m_rInitDirectX{ InitDirectX::GetInstance() };
 
-	const LPCSTR m_windowName{ "Test" };
 	HWND m_hwnd{ NULL };
-	HINSTANCE m_hInstance{ NULL };
-	int m_nCmdShow{ NULL };
 };

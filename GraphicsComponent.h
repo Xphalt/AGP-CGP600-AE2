@@ -13,7 +13,7 @@ class RenderWindow;
 class Renderer;
 class GameObject;
 class Model;
-class Shader;
+class Shaders;
 class Texture;
 class Lighting;
 
@@ -23,7 +23,7 @@ class GraphicsComponent
 {
 public:
 	GraphicsComponent(InitDirectX* _initDirectX, RenderWindow* _renderWindow);
-	GraphicsComponent(Model* _model, Shader* _shader, Texture* _texture, Lighting* _lighting, Renderer* _renderer);
+	GraphicsComponent(Model* _model, Shaders* _shaders, Texture* _texture, Lighting* _lighting, Renderer* _renderer);
 	~GraphicsComponent();
 
 	void Update(GameObject& _gameObject);
@@ -35,7 +35,7 @@ private:
 	Renderer* m_pRenderer{ nullptr };
 	GameObject* m_pGameObject{ nullptr };
 	Model* m_pModel{ nullptr };
-	Shader* m_pShader{ nullptr };
+	Shaders* m_pShaders{ nullptr };
 	Texture* m_pTexture{ nullptr };
 	Lighting* m_pLighting{ nullptr };
 };
