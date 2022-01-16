@@ -1,7 +1,6 @@
 #pragma once
 #include "Renderer.h"
 #include "InitDirectX.h"
-#include "RenderWindow.h"
 
 class Renderer;
 class InitDirectX;

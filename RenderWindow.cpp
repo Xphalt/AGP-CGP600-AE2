@@ -3,18 +3,7 @@
 
 RenderWindow RenderWindow::s_instance;
 
-void RenderWindow::Initialise(HINSTANCE _hInstance, std::string _windowTitle, std::string _windowClass, int _width, int _height)
-{
-	m_hInstance = { _hInstance };
-	m_windowTitle = { _windowTitle };
-	m_windowClass = { _windowClass };
-	m_width = { _width };
-	m_height = { _height };
-
-	InitialiseWindow();
-}
-
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WndProc(HWND _hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps;
     HDC hdc;
@@ -22,8 +11,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_PAINT:
-        hdc = BeginPaint(hWnd, &ps);
-        EndPaint(hWnd, &ps);
+        hdc = BeginPaint(_hwnd, &ps);
+        EndPaint(_hwnd, &ps);
         break;
 
     case WM_DESTROY:
@@ -33,92 +22,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_KEYDOWN:
         if (wParam == VK_ESCAPE)
         {
-            DestroyWindow(hWnd);
+            DestroyWindow(_hwnd);
             return 0;
         }
 
     default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
+        return DefWindowProc(_hwnd, message, wParam, lParam);
     }
 
     return 0;
 }
 
-bool RenderWindow::InitialiseWindow()
+HRESULT RenderWindow::InitialiseWindow(std::string& m_windowName, HINSTANCE _hInstance, int _nCmdShow)
 {
-	RegisterWindowClass();
+    WNDCLASSEX wcex = { 0 };
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = WndProc;
+    wcex.hInstance = _hInstance;
+    wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 
-	m_handle = CreateWindowEx(
-		0,
-		m_windowClass.c_str(),
-		m_windowTitle.c_str(),
-		WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
-		0,
-		0,
-		m_width,
-		m_height,
-		NULL,
-		NULL,
-		m_hInstance,
-		nullptr);
+    wcex.lpszClassName = m_windowName.c_str();
 
-	if (m_handle == NULL)
-	{
-		DXTRACE_MSG("CreateWindowEx failed for window: ", m_windowTitle.c_str());
+    if (!RegisterClassEx(&wcex)) { return E_FAIL; }
 
-		return false;
-	}
+    RECT rc = { 0, 0, 640, 480 };
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+    m_hwnd = CreateWindow(m_windowName.c_str(), NULL, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+        rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, _hInstance, NULL);
 
-	ShowWindow(m_handle, SW_SHOW);
-	SetForegroundWindow(m_handle);
-	SetFocus(m_handle);
+    if (!m_hwnd) { return E_FAIL; }
 
-	return true;
-}
+    ShowWindow(m_hwnd, _nCmdShow);
 
-bool RenderWindow::ProccessMessages()
-{
-	MSG msg;
-	ZeroMemory(&msg, sizeof(MSG));
-
-	if (PeekMessage(&msg,
-		m_handle,
-		0,
-		0,
-		PM_REMOVE))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-
-	if (msg.message == WM_NULL)
-	{
-		if (!IsWindow(m_handle))
-		{
-			m_handle = NULL;
-			UnregisterClass(m_windowClass.c_str(), m_hInstance);
-
-			return false;
-		}
-	}
-
-	return true;
-}
-
-void RenderWindow::RegisterWindowClass()
-{
-	WNDCLASSEX wc;
-	wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-	wc.lpfnWndProc = DefWindowProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = m_hInstance;
-	wc.hIcon = NULL;
-	wc.hIconSm = NULL;
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = NULL;
-	wc.lpszMenuName = NULL;
-	wc.lpszClassName = m_windowClass.c_str();
-	wc.cbSize = sizeof(WNDCLASSEX);
-	RegisterClassEx(&wc);
+    return S_OK;
 }

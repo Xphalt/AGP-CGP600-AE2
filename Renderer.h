@@ -21,6 +21,7 @@ public:
 	static Renderer&		GetInstance()				{ return s_instance; };
 	
 	void					RenderFrame(void);
+	HWND					GetHWND()			   { return m_hwnd;}
 	ID3D11Device*			GetDevice()			  const { return m_pDevice; }
 	ID3D11DeviceContext*	GetDeviceContext()	  const { return m_pDeviceContext; }
 	IDXGISwapChain*			GetSwapChain()		  const { return m_pSwapChain; }
@@ -32,6 +33,7 @@ private:
 	static Renderer			s_instance;
 	Renderer() {};
 
+	HWND					m_hwnd				  { NULL };
 	ID3D11Device*		    m_pDevice			  { nullptr };
 	ID3D11DeviceContext*	m_pDeviceContext	  { nullptr };
 	IDXGISwapChain*			m_pSwapChain		  { nullptr };
