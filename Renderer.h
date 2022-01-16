@@ -19,21 +19,22 @@ struct Vertex;
 class Renderer
 {
 public:
+	friend class InitDirectX;
 	Renderer(const Renderer&) = delete;
 	static Renderer&		GetInstance()		    { return s_instance; };
-												    
+
 	void					 RenderFrame(void);	    
 	HWND&					 GetHWND()			    { return m_hwnd;}
-	ID3D11Device*&			 GetDevice()		    { return m_pDevice; }
-	ID3D11DeviceContext*&	 GetDeviceContext()	    { return m_pDeviceContext; }
-	IDXGISwapChain*&		 GetSwapChain()		    { return m_pSwapChain; }
-	ID3D11RenderTargetView*& GetRenderTargetView()  { return m_pRenderTargetView; }
-	Shaders*&				 GetShaders()		    { return m_pShaders; }
-	ID3D11Buffer*&			 GetVertexBuffer()	    { return m_pVertexBuffer; }
+	ID3D11Device*			 GetDevice()		    { return m_pDevice; }
+	ID3D11DeviceContext*	 GetDeviceContext()	    { return m_pDeviceContext; }
+	IDXGISwapChain*			 GetSwapChain()		    { return m_pSwapChain; }
+	ID3D11RenderTargetView*	 GetRenderTargetView()  { return m_pRenderTargetView; }
+	Shaders*				 GetShaders()		    { return m_pShaders; }
+	ID3D11Buffer*			 GetVertexBuffer()	    { return m_pVertexBuffer; }
 												    
 private:										    
 	static Renderer			 s_instance;		    
-	Renderer() {};								    
+	Renderer();								    
 												    
 	HWND					 m_hwnd				    { nullptr };
 	ID3D11Device*		     m_pDevice			    { nullptr };

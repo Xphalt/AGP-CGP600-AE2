@@ -60,7 +60,7 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     scd.BufferDesc.RefreshRate.Numerator = 60;
     scd.BufferDesc.RefreshRate.Denominator = 1;
     scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    scd.OutputWindow = Renderer::GetInstance().GetHWND();
+    scd.OutputWindow = Renderer::GetInstance().m_hwnd;
     scd.SampleDesc.Count = 1;
     scd.SampleDesc.Quality = 0;
     scd.Windowed = true;
@@ -79,10 +79,10 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
             numFeatureLevels,
             D3D11_SDK_VERSION,
             &scd,
-            &Renderer::GetInstance().GetSwapChain(),
-            &Renderer::GetInstance().GetDevice(),
-            GetFeatureLevel(),
-            &Renderer::GetInstance().GetDeviceContext()
+            &Renderer::GetInstance().m_pSwapChain,
+            &Renderer::GetInstance().m_pDevice,
+            &m_featureLevel,
+            &Renderer::GetInstance().m_pDeviceContext
         );
 
         if (SUCCEEDED(hr)) { break; }
@@ -93,7 +93,7 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
 
 #pragma region Create and set back buffer
     ID3D11Texture2D* pBackBuffer;
-    hr = Renderer::GetInstance().GetSwapChain()->GetBuffer
+    hr = Renderer::GetInstance().m_pSwapChain->GetBuffer
     (
         0,
         __uuidof(ID3D11Texture2D),
@@ -104,21 +104,21 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
 #pragma endregion
 
 #pragma region Create and set render target view
-    hr = Renderer::GetInstance().GetDevice()->CreateRenderTargetView
+    hr = Renderer::GetInstance().m_pDevice->CreateRenderTargetView
     (
         pBackBuffer,
         NULL,
-        &Renderer::GetInstance().GetRenderTargetView()
+        &Renderer::GetInstance().m_pRenderTargetView
     );
 
     pBackBuffer->Release();
 
     if (FAILED(hr)) { return hr; }
 
-    Renderer::GetInstance().GetDeviceContext()->OMSetRenderTargets
+    Renderer::GetInstance().m_pDeviceContext->OMSetRenderTargets
     (
         1,
-        &Renderer::GetInstance().GetRenderTargetView(),
+        &Renderer::GetInstance().m_pRenderTargetView,
         NULL
     );
 #pragma endregion
@@ -133,7 +133,7 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     viewport.MinDepth = 0.0f;
     viewport.MaxDepth = 1.0f;
 
-    Renderer::GetInstance().GetDeviceContext()->RSSetViewports(1, &viewport);
+    Renderer::GetInstance().m_pDeviceContext->RSSetViewports(1, &viewport);
 
     return hr;
 #pragma endregion
@@ -148,8 +148,8 @@ void InitDirectX::InitialiseShaders()
 
     UINT numElements = ARRAYSIZE(layout);
 
-    Renderer::GetInstance().GetShaders()->InitialiseVertexShader(L"VertexShader.cso", layout, numElements);
-    Renderer::GetInstance().GetShaders()->InitialisePixelShader(L"PixelShader.cso", layout, numElements);
+    Renderer::GetInstance().m_pShaders->InitialiseVertexShader(L"assets/shaders/VertexShader.cso", layout, numElements);
+    Renderer::GetInstance().m_pShaders->InitialisePixelShader(L"assets/shaders/PixelShader.cso", layout, numElements);
 }
 
 void InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
@@ -175,5 +175,5 @@ void InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
     ZeroMemory(&vertexBufferData, sizeof(vertexBufferData));
     vertexBufferData.pSysMem = vertex;
 
-    hr = Renderer::GetInstance().GetDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &Renderer::GetInstance().GetVertexBuffer());
+    hr = Renderer::GetInstance().m_pDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &Renderer::GetInstance().m_pVertexBuffer);
 }

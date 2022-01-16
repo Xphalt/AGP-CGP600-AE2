@@ -3,9 +3,14 @@
 
 Renderer Renderer::s_instance;
 
+Renderer::Renderer()
+{
+	m_pShaders = new Shaders();
+}
+
 void Renderer::RenderFrame(void)
 {
-	float backgroundColour[] = { 0.1f, 0.2f, 0.6f, 1.0f };
+	float backgroundColour[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	GetDeviceContext()->ClearRenderTargetView(GetRenderTargetView(), backgroundColour);
 	GetDeviceContext()->IASetInputLayout(GetShaders()->GetInputLayout());
 	GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -15,7 +20,7 @@ void Renderer::RenderFrame(void)
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	GetDeviceContext()->IASetVertexBuffers(0, 1, &GetVertexBuffer(), &stride, &offset);
+	GetDeviceContext()->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &stride, &offset);
 	GetDeviceContext()->Draw(3, 0);
 	GetSwapChain()->Present(0, 0);
 }
