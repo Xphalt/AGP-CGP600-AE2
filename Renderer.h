@@ -32,8 +32,11 @@ public:
 	ID3D11RenderTargetView*	 GetRenderTargetView()  { return m_pRenderTargetView; }
 	Shaders*				 GetShaders()		    { return m_pShaders; }
 	ID3D11Buffer*			 GetVertexBuffer()	    { return m_pVertexBuffer; }
-	ID3D11RasterizerState*	 GetRasterState()		{ return m_pRasterState;}
-												    
+	ID3D11RasterizerState*	 GetRasterState()		{ return m_pRasterState; }
+	ID3D11DepthStencilView*  GetDSV()				{ return m_pDSV; }
+	ID3D11Texture2D*		 GetDSB()				{ return m_pDSB; }
+	ID3D11DepthStencilState* GetDSS()				{ return m_pDSS; }
+
 private:										    
 	static Renderer			 s_instance;		    
 	Renderer();								    
@@ -46,4 +49,7 @@ private:
 	Shaders*				 m_pShaders			    { nullptr };
 	ID3D11Buffer*			 m_pVertexBuffer	    { nullptr };
 	ID3D11RasterizerState*	 m_pRasterState			{ nullptr };
+	ID3D11DepthStencilView*  m_pDSV					{ nullptr };
+	ID3D11Texture2D*		 m_pDSB					{ nullptr };
+	ID3D11DepthStencilState* m_pDSS					{ nullptr };
 };

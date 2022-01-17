@@ -156,6 +156,37 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
 
 #pragma endregion
 
+#pragma region Create and set depth stencil
+    D3D11_TEXTURE2D_DESC depthStencilDesc;
+    depthStencilDesc.Width = width;
+    depthStencilDesc.Height = height;
+    depthStencilDesc.MipLevels = 1;
+    depthStencilDesc.ArraySize = 1;
+    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilDesc.SampleDesc.Count = 1;
+    depthStencilDesc.SampleDesc.Quality = 0;
+    depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthStencilDesc.CPUAccessFlags = 0;
+    depthStencilDesc.MiscFlags = 0;
+
+    hr = Renderer::GetInstance().m_pDevice->CreateTexture2D(&depthStencilDesc, NULL, &Renderer::GetInstance().m_pDSB);
+
+    hr = Renderer::GetInstance().m_pDevice->CreateDepthStencilView(Renderer::GetInstance().m_pDSB, NULL, &Renderer::GetInstance().m_pDSV);
+
+    Renderer::GetInstance().m_pDeviceContext->OMSetRenderTargets(1, &Renderer::GetInstance().m_pRenderTargetView, Renderer::GetInstance().m_pDSV);
+
+    D3D11_DEPTH_STENCIL_DESC depthStencildesc;
+    ZeroMemory(&depthStencildesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+
+    depthStencildesc.DepthEnable = true;
+    depthStencildesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK::D3D11_DEPTH_WRITE_MASK_ALL;
+    depthStencildesc.DepthFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_LESS_EQUAL;
+
+    hr = Renderer::GetInstance().m_pDevice->CreateDepthStencilState(&depthStencildesc, &Renderer::GetInstance().m_pDSS);
+
+#pragma endregion
+
 
     return S_OK;
 }
@@ -164,7 +195,7 @@ void InitDirectX::InitialiseShaders()
 {
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
-        { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         { "COLOUR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
@@ -178,9 +209,9 @@ HRESULT InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
 {
     Vertex vertex[] =
     {
-        /* Left point  */ Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 0.0f),
-        /* top point   */ Vertex(0.0f, 0.5f, 0.0f, 1.0f, 0.0f),
-        /* Right point */ Vertex(0.5f, -0.5f, 0.0f, 0.0f, 1.0f),
+        /* Left point  */ Vertex(-0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f),
+        /* top point   */ Vertex( 0.0f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f),
+        /* Right point */ Vertex( 0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f),
     };
 
     D3D11_BUFFER_DESC vertexBufferDesc;

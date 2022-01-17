@@ -18,11 +18,13 @@ void Renderer::RenderFrame(void)
 {
 	float backgroundColour[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	GetDeviceContext()->ClearRenderTargetView(GetRenderTargetView(), backgroundColour);
-	
+	m_pDeviceContext->ClearDepthStencilView(GetDSV(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
 	GetDeviceContext()->IASetInputLayout(GetShaders()->GetInputLayout());
 	GetDeviceContext()->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	GetDeviceContext()->RSSetState(GetRasterState());
-	
+	m_pDeviceContext->OMSetDepthStencilState(GetDSS(), 0);
+
 	GetDeviceContext()->VSSetShader(GetShaders()->GetVertexShader(), NULL, 0);
 	GetDeviceContext()->PSSetShader(GetShaders()->GetPixelShader(), NULL, 0);
 
