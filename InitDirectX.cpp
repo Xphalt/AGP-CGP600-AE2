@@ -152,14 +152,13 @@ void InitDirectX::InitialiseShaders()
     Renderer::GetInstance().m_pShaders->InitialisePixelShader(L"assets/shaders/PixelShader.cso", layout, numElements);
 }
 
-void InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
+HRESULT InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
 {
     Vertex vertex[] =
     {
-        Vertex(0.0f, 0.0f),
-        Vertex(-1.0f, 0.0f),
-        Vertex(1.0f, 0.0f),
-        Vertex(0.0f, 1.0f)
+        Vertex(0.0f, -0.1f),
+        Vertex(-0.1f, 0.0f),
+        Vertex(0.1f, 0.0f),
     };
 
     D3D11_BUFFER_DESC vertexBufferDesc;
@@ -176,4 +175,8 @@ void InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
     vertexBufferData.pSysMem = vertex;
 
     hr = Renderer::GetInstance().m_pDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &Renderer::GetInstance().m_pVertexBuffer);
+
+    if (FAILED(hr)) { return hr; }
+
+    return S_OK;
 }
