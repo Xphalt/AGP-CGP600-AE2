@@ -20,11 +20,11 @@ HRESULT Shaders::InitialiseVertexShader(std::wstring _shaderPath, D3D11_INPUT_EL
 
 	if (FAILED(hr)) { return hr; }
 
-	hr = Renderer::GetInstance().GetDevice()->CreateVertexShader(m_pVertexShaderBuffer, m_pVertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader);
+	hr = Renderer::GetInstance().GetDevice()->CreateVertexShader(m_pVertexShaderBuffer->GetBufferPointer(), m_pVertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader);
 	
 	if (FAILED(hr)) { return hr; }
 
-	hr = Renderer::GetInstance().GetDevice()->CreateInputLayout(_inputDesc, _numElements, m_pVertexShaderBuffer, m_pVertexShaderBuffer->GetBufferSize(), &m_pInputLayout);
+	hr = Renderer::GetInstance().GetDevice()->CreateInputLayout(_inputDesc, _numElements, m_pVertexShaderBuffer->GetBufferPointer(), m_pVertexShaderBuffer->GetBufferSize(), &m_pInputLayout);
 
 	if (FAILED(hr)) { return hr; }
 
@@ -37,7 +37,7 @@ HRESULT Shaders::InitialisePixelShader(std::wstring _shaderPath, D3D11_INPUT_ELE
 
 	if (FAILED(hr)) { return hr; }
 
-	hr = Renderer::GetInstance().GetDevice()->CreatePixelShader(m_pPixelShaderBuffer, m_pPixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader);
+	hr = Renderer::GetInstance().GetDevice()->CreatePixelShader(m_pPixelShaderBuffer->GetBufferPointer(), m_pPixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader);
 
 	if (FAILED(hr)) { return hr; }
 

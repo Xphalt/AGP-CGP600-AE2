@@ -21,6 +21,7 @@ class Renderer
 public:
 	friend class InitDirectX;
 	Renderer(const Renderer&) = delete;
+	~Renderer();
 	static Renderer&		GetInstance()		    { return s_instance; };
 
 	void					 RenderFrame(void);	    
