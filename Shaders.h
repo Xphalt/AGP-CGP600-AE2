@@ -10,7 +10,7 @@ public:
 	~Shaders();
 
 	HRESULT InitialiseVertexShader(std::wstring _shaderPath, D3D11_INPUT_ELEMENT_DESC* _inputDesc, UINT _numElements);
-	HRESULT InitialisePixelShader(std::wstring _shaderPath, D3D11_INPUT_ELEMENT_DESC* _inputDesc, UINT _numElements);
+	HRESULT InitialisePixelShader(std::wstring _shaderPath);
 
 	ID3D11VertexShader* GetVertexShader() { return m_pVertexShader; }
 	ID3D11PixelShader* GetPixelShader() { return m_pPixelShader; }

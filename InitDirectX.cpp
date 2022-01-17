@@ -53,17 +53,24 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     DXGI_SWAP_CHAIN_DESC scd;
     ZeroMemory(&scd, sizeof(scd));
 
-    scd.BufferCount = 1;
     scd.BufferDesc.Width = width;
     scd.BufferDesc.Height = height;
-    scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     scd.BufferDesc.RefreshRate.Numerator = 60;
     scd.BufferDesc.RefreshRate.Denominator = 1;
-    scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    scd.OutputWindow = Renderer::GetInstance().m_hwnd;
     scd.SampleDesc.Count = 1;
     scd.SampleDesc.Quality = 0;
-    scd.Windowed = true;
+    scd.BufferCount = 1;
+    scd.OutputWindow = Renderer::GetInstance().m_hwnd;
+    scd.Windowed = TRUE;
+
+    scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    scd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+    scd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+    scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+    scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+
+
 
     for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++)
     {
@@ -135,30 +142,45 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
 
     Renderer::GetInstance().m_pDeviceContext->RSSetViewports(1, &viewport);
 
-    return hr;
 #pragma endregion
+
+#pragma region Create and set rasterizer state
+    D3D11_RASTERIZER_DESC rastDesc;
+    ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
+    rastDesc.FillMode = D3D11_FILL_SOLID;
+    rastDesc.CullMode = D3D11_CULL_BACK;
+
+    hr = Renderer::GetInstance().GetDevice()->CreateRasterizerState(&rastDesc, &Renderer::GetInstance().m_pRasterState);
+
+    if (FAILED(hr)) { return hr; }
+
+#pragma endregion
+
+
+    return S_OK;
 }
 
 void InitDirectX::InitialiseShaders()
 {
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
-        { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA }
+        { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOUR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
     UINT numElements = ARRAYSIZE(layout);
 
     Renderer::GetInstance().m_pShaders->InitialiseVertexShader(L"assets/shaders/VertexShader.cso", layout, numElements);
-    Renderer::GetInstance().m_pShaders->InitialisePixelShader(L"assets/shaders/PixelShader.cso", layout, numElements);
+    Renderer::GetInstance().m_pShaders->InitialisePixelShader(L"assets/shaders/PixelShader.cso");
 }
 
 HRESULT InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
 {
     Vertex vertex[] =
     {
-        Vertex(0.0f, -0.1f),
-        Vertex(-0.1f, 0.0f),
-        Vertex(0.1f, 0.0f),
+        /* Left point  */ Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 0.0f),
+        /* top point   */ Vertex(0.0f, 0.5f, 0.0f, 1.0f, 0.0f),
+        /* Right point */ Vertex(0.5f, -0.5f, 0.0f, 0.0f, 1.0f),
     };
 
     D3D11_BUFFER_DESC vertexBufferDesc;

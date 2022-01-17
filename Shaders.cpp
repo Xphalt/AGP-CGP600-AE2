@@ -31,7 +31,7 @@ HRESULT Shaders::InitialiseVertexShader(std::wstring _shaderPath, D3D11_INPUT_EL
 	return S_OK;
 }
 
-HRESULT Shaders::InitialisePixelShader(std::wstring _shaderPath, D3D11_INPUT_ELEMENT_DESC* _inputDesc, UINT _numElements)
+HRESULT Shaders::InitialisePixelShader(std::wstring _shaderPath)
 {
 	HRESULT hr = D3DReadFileToBlob(_shaderPath.c_str(), &m_pPixelShaderBuffer);
 

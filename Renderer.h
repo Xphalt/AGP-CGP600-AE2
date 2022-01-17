@@ -32,6 +32,7 @@ public:
 	ID3D11RenderTargetView*	 GetRenderTargetView()  { return m_pRenderTargetView; }
 	Shaders*				 GetShaders()		    { return m_pShaders; }
 	ID3D11Buffer*			 GetVertexBuffer()	    { return m_pVertexBuffer; }
+	ID3D11RasterizerState*	 GetRasterState()		{ return m_pRasterState;}
 												    
 private:										    
 	static Renderer			 s_instance;		    
@@ -44,4 +45,5 @@ private:
 	ID3D11RenderTargetView*  m_pRenderTargetView    { nullptr };
 	Shaders*				 m_pShaders			    { nullptr };
 	ID3D11Buffer*			 m_pVertexBuffer	    { nullptr };
+	ID3D11RasterizerState*	 m_pRasterState			{ nullptr };
 };
