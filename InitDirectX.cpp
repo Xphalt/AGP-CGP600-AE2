@@ -216,7 +216,7 @@ void InitDirectX::InitialiseShaders()
 
 HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
 {
-#pragma region Create and set vertex buffer
+#pragma region Create and set vertex & indices buffer
     Vertex vertex[] =
     {
         Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left  - [0]
@@ -231,24 +231,11 @@ HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
         0, 2, 3
     };
 
-    hr = Renderer::GetInstance().m_pVertexBuffer.Initialise(Renderer::GetInstance().GetDevice(), vertex, ARRAYSIZE(vertex));
+    hr = Renderer::GetInstance().m_pVertexBuffer.Initialise(Renderer::GetInstance().m_pDevice, vertex, ARRAYSIZE(vertex));
 
     if (FAILED(hr)) { return hr; }
-#pragma endregion
 
-#pragma region Create and set indices buffer
-    D3D11_BUFFER_DESC indexBufferDesc;
-    ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
-    indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    indexBufferDesc.ByteWidth = sizeof(DWORD) * ARRAYSIZE(indices);
-    indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    indexBufferDesc.CPUAccessFlags = 0;
-    indexBufferDesc.MiscFlags = 0;
-
-    D3D11_SUBRESOURCE_DATA indexBufferData{NULL};
-    indexBufferData.pSysMem = indices;
-
-    hr = Renderer::GetInstance().m_pDevice->CreateBuffer(&indexBufferDesc, &indexBufferData, &Renderer::GetInstance().m_pIndicesBuffer);
+    hr = Renderer::GetInstance().m_pIndicesBuffer.Initialise(Renderer::GetInstance().m_pDevice, indices, ARRAYSIZE(indices));
 
     if (FAILED(hr)) { return hr; }
 #pragma endregion
