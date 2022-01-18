@@ -11,7 +11,7 @@ HRESULT InitDirectX::Initialise()
 
     InitialiseShaders();
 
-    InitialiseVertexBuffer(hr);
+    InitialiseScene(hr);
 
     return S_OK;
 }
@@ -157,7 +157,7 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     if (FAILED(hr)) { return hr; }
 #pragma endregion
 
-#pragma region Create and set the viewport
+#pragma region Create and set viewport
     D3D11_VIEWPORT viewport;
 
     viewport.TopLeftX = 0;
@@ -214,14 +214,15 @@ void InitDirectX::InitialiseShaders()
     Renderer::GetInstance().m_pShaders->InitialisePixelShader(Renderer::GetInstance().m_pDevice, L"assets/shaders/PixelShader.cso");
 }
 
-HRESULT InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
+HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
 {
+#pragma region Create and set vertex buffer
     Vertex vertex[] =
     {
         Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left  - [0]
         Vertex(-0.5f,   0.5f, 1.0f, 0.0f, 0.0f), //Top Left     - [1]
         Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f),  //Top Right    - [2]
-        Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f),  //Bottom Left  - [3]
+        Vertex(0.5f, -0.5f, 1.0f, 1.0f, 1.0f),  //Bottom Left  - [3]
     };
 
     DWORD indices[] =
@@ -246,10 +247,27 @@ HRESULT InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
     hr = Renderer::GetInstance().m_pDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &Renderer::GetInstance().m_pVertexBuffer);
 
     if (FAILED(hr)) { return hr; }
+#pragma endregion
 
+#pragma region Create and set indices buffer
+    D3D11_BUFFER_DESC indexBufferDesc;
+    ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
+    indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    indexBufferDesc.ByteWidth = sizeof(DWORD) * ARRAYSIZE(indices);
+    indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    indexBufferDesc.CPUAccessFlags = 0;
+    indexBufferDesc.MiscFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA indexBufferData;
+    indexBufferData.pSysMem = indices;
+    hr = Renderer::GetInstance().m_pDevice->CreateBuffer(&indexBufferDesc, &indexBufferData, &Renderer::GetInstance().m_pIndicesBuffer);
+#pragma endregion
+
+#pragma region Load texture
     D3DX11CreateShaderResourceViewFromFile(Renderer::GetInstance().m_pDevice, "assets/textures/BoxTexture.bmp", NULL, NULL, &Renderer::GetInstance().m_pTexture, NULL);
 
     if (FAILED(hr)) { return hr; }
 
     return S_OK;
+#pragma endregion
 }

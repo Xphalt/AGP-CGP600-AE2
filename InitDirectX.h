@@ -16,7 +16,7 @@ private:
 
 	HRESULT					InitialiseDirectX(HRESULT& hr);
 	void					InitialiseShaders();
-	HRESULT					InitialiseVertexBuffer(HRESULT& hr);
+	HRESULT					InitialiseScene(HRESULT& hr);
 
 	static InitDirectX		s_instance;
 	D3D_DRIVER_TYPE			m_driverType			  { D3D_DRIVER_TYPE_NULL };
