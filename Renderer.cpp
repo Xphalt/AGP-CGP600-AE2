@@ -17,7 +17,7 @@ Renderer::~Renderer()
 	if (m_pDSV != nullptr) { m_pDSV = nullptr; }
 	if (m_pRasterState != nullptr) { m_pRasterState = nullptr; }
 	if (m_pIndicesBuffer != nullptr) { m_pIndicesBuffer = nullptr; }
-	if (m_pVertexBuffer != nullptr) { m_pVertexBuffer = nullptr; }
+	//if (m_pVertexBuffer != NULL) { m_pVertexBuffer = NULL; }
 	if (m_pShaders != nullptr) { m_pShaders = nullptr; }
 	if (m_pRenderTargetView != nullptr) { m_pRenderTargetView = nullptr; }
 	if (m_pSwapChain != nullptr) { m_pSwapChain = nullptr; }
@@ -42,10 +42,10 @@ void Renderer::RenderFrame(void)
 	GetDeviceContext()->VSSetShader(GetShaders()->GetVertexShader(), NULL, 0);
 	GetDeviceContext()->PSSetShader(GetShaders()->GetPixelShader(), NULL, 0);
 
-	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
+
 	GetDeviceContext()->PSSetShaderResources(0, 1, &m_pTexture);
-	GetDeviceContext()->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &stride, &offset);
+	GetDeviceContext()->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetBufferAddress(), m_pVertexBuffer.GetStrideAddress(), &offset);
 	GetDeviceContext()->IASetIndexBuffer(m_pIndicesBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 	GetDeviceContext()->DrawIndexed(6, 0, 0);

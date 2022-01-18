@@ -163,6 +163,7 @@
     <ClInclude Include="RenderWindow.h" />
     <ClInclude Include="Shaders.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="VertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp" />

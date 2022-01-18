@@ -7,11 +7,11 @@
 #define _XM_NO_INTRINSICS_
 #define XM_NO_ALIGNMENT
 #include <DirectXMath.h>
-
-using namespace DirectX;
-
 #include "Shaders.h"
 #include "Vertex.h"
+#include "VertexBuffer.h"
+
+using namespace DirectX;
 
 class Shaders;
 struct Vertex;
@@ -31,7 +31,7 @@ public:
 	IDXGISwapChain*			  GetSwapChain()		 { return m_pSwapChain; }
 	ID3D11RenderTargetView*	  GetRenderTargetView()  { return m_pRenderTargetView; }
 	Shaders*				  GetShaders()		     { return m_pShaders; }
-	ID3D11Buffer*			  GetVertexBuffer()	     { return m_pVertexBuffer; }
+	ID3D11Buffer*			  GetIndicesBuffer()	 { return m_pIndicesBuffer; }
 	ID3D11RasterizerState*	  GetRasterState()		 { return m_pRasterState; }
 	ID3D11DepthStencilView*   GetDSV()				 { return m_pDSV; }
 	ID3D11Texture2D*		  GetDSB()				 { return m_pDSB; }
@@ -48,7 +48,7 @@ private:
 	IDXGISwapChain*			  m_pSwapChain				{ nullptr };
 	ID3D11RenderTargetView*   m_pRenderTargetView		{ nullptr };
 	Shaders*				  m_pShaders			    { nullptr };
-	ID3D11Buffer*			  m_pVertexBuffer			{ nullptr };
+	VertexBuffer<Vertex>	  m_pVertexBuffer;
 	ID3D11Buffer*			  m_pIndicesBuffer			{ nullptr };
 	ID3D11RasterizerState*	  m_pRasterState			{ nullptr };
 	ID3D11DepthStencilView*   m_pDSV					{ nullptr };

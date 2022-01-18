@@ -99,7 +99,7 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
 #pragma endregion
 
 #pragma region Create and set back buffer
-    ID3D11Texture2D* pBackBuffer;
+    ID3D11Texture2D* pBackBuffer{nullptr};
     hr = Renderer::GetInstance().m_pSwapChain->GetBuffer
     (
         0,
@@ -122,7 +122,7 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
 #pragma endregion
 
 #pragma region Create and set depth stencil
-    D3D11_TEXTURE2D_DESC depthStencilDesc;
+    D3D11_TEXTURE2D_DESC depthStencilDesc{NULL};
     depthStencilDesc.Width = width;
     depthStencilDesc.Height = height;
     depthStencilDesc.MipLevels = 1;
@@ -158,7 +158,7 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
 #pragma endregion
 
 #pragma region Create and set viewport
-    D3D11_VIEWPORT viewport;
+    D3D11_VIEWPORT viewport{NULL};
 
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
@@ -231,20 +231,7 @@ HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
         0, 2, 3
     };
 
-    D3D11_BUFFER_DESC vertexBufferDesc;
-    ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
-
-    vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    vertexBufferDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertex);
-    vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vertexBufferDesc.CPUAccessFlags = 0;
-    vertexBufferDesc.MiscFlags = 0;
-
-    D3D11_SUBRESOURCE_DATA vertexBufferData;
-    ZeroMemory(&vertexBufferData, sizeof(vertexBufferData));
-    vertexBufferData.pSysMem = vertex;
-
-    hr = Renderer::GetInstance().m_pDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &Renderer::GetInstance().m_pVertexBuffer);
+    hr = Renderer::GetInstance().m_pVertexBuffer.Initialise(Renderer::GetInstance().GetDevice(), vertex, ARRAYSIZE(vertex));
 
     if (FAILED(hr)) { return hr; }
 #pragma endregion
@@ -258,9 +245,12 @@ HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
     indexBufferDesc.CPUAccessFlags = 0;
     indexBufferDesc.MiscFlags = 0;
 
-    D3D11_SUBRESOURCE_DATA indexBufferData;
+    D3D11_SUBRESOURCE_DATA indexBufferData{NULL};
     indexBufferData.pSysMem = indices;
+
     hr = Renderer::GetInstance().m_pDevice->CreateBuffer(&indexBufferDesc, &indexBufferData, &Renderer::GetInstance().m_pIndicesBuffer);
+
+    if (FAILED(hr)) { return hr; }
 #pragma endregion
 
 #pragma region Load texture
