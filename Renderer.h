@@ -1,8 +1,5 @@
 #pragma once
 #include <d3d11.h>
-//#include <D3D11.h>
-//#include <d3d11shader.h>
-//#include <D3D11Shader.h>
 #include <dxgi.h>
 #include <d3dX11.h>
 #include <windows.h>
@@ -52,6 +49,7 @@ private:
 	ID3D11RenderTargetView*   m_pRenderTargetView		{ nullptr };
 	Shaders*				  m_pShaders			    { nullptr };
 	ID3D11Buffer*			  m_pVertexBuffer			{ nullptr };
+	ID3D11Buffer*			  m_pIndicesBuffer			{ nullptr };
 	ID3D11RasterizerState*	  m_pRasterState			{ nullptr };
 	ID3D11DepthStencilView*   m_pDSV					{ nullptr };
 	ID3D11Texture2D*		  m_pDSB					{ nullptr };

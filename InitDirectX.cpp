@@ -218,13 +218,16 @@ HRESULT InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
 {
     Vertex vertex[] =
     {
-        Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left 
-        Vertex(-0.5f,   0.5f, 1.0f, 0.0f, 0.0f), //Top Left
-        Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right
+        Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left  - [0]
+        Vertex(-0.5f,   0.5f, 1.0f, 0.0f, 0.0f), //Top Left     - [1]
+        Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f),  //Top Right    - [2]
+        Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f),  //Bottom Left  - [3]
+    };
 
-        Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left 
-        Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right
-        Vertex(0.5f,  -0.5f, 1.0f, 1.0f, 1.0f), //Bottom Right
+    DWORD indices[] =
+    {
+        0, 1, 2,
+        0, 2, 3
     };
 
     D3D11_BUFFER_DESC vertexBufferDesc;

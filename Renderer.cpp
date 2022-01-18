@@ -10,7 +10,20 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
-
+	if (m_pSamplerState != nullptr) { m_pSamplerState = nullptr; }
+	if (m_pTexture != nullptr) { m_pTexture = nullptr; }
+	if (m_pDSS != nullptr) { m_pDSS = nullptr; }
+	if (m_pDSB != nullptr) { m_pDSB = nullptr; }
+	if (m_pDSV != nullptr) { m_pDSV = nullptr; }
+	if (m_pRasterState != nullptr) { m_pRasterState = nullptr; }
+	if (m_pIndicesBuffer != nullptr) { m_pIndicesBuffer = nullptr; }
+	if (m_pVertexBuffer != nullptr) { m_pVertexBuffer = nullptr; }
+	if (m_pShaders != nullptr) { m_pShaders = nullptr; }
+	if (m_pRenderTargetView != nullptr) { m_pRenderTargetView = nullptr; }
+	if (m_pSwapChain != nullptr) { m_pSwapChain = nullptr; }
+	if (m_pDeviceContext != nullptr) { m_pDeviceContext = nullptr; }
+	if (m_pDevice != nullptr) { m_pDevice = nullptr; }
+	if (m_hwnd != NULL) { m_hwnd = NULL;}
 	if (m_pShaders != nullptr) { delete m_pShaders; m_pShaders = nullptr; }
 }
 
