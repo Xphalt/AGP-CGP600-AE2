@@ -14,30 +14,30 @@ Shaders::~Shaders()
 	if (m_pVertexShaderBuffer) { m_pVertexShaderBuffer->Release(); m_pVertexShaderBuffer = nullptr;	}
 }
 
-HRESULT Shaders::InitialiseVertexShader(std::wstring _shaderPath, D3D11_INPUT_ELEMENT_DESC* _inputDesc, UINT _numElements)
+HRESULT Shaders::InitialiseVertexShader(ID3D11Device* _device, std::wstring _shaderPath, D3D11_INPUT_ELEMENT_DESC* _inputDesc, UINT _numElements)
 {
 	HRESULT hr = D3DReadFileToBlob(_shaderPath.c_str(), &m_pVertexShaderBuffer);
 
 	if (FAILED(hr)) { return hr; }
 
-	hr = Renderer::GetInstance().GetDevice()->CreateVertexShader(m_pVertexShaderBuffer->GetBufferPointer(), m_pVertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader);
+	hr = _device->CreateVertexShader(m_pVertexShaderBuffer->GetBufferPointer(), m_pVertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader);
 	
 	if (FAILED(hr)) { return hr; }
 
-	hr = Renderer::GetInstance().GetDevice()->CreateInputLayout(_inputDesc, _numElements, m_pVertexShaderBuffer->GetBufferPointer(), m_pVertexShaderBuffer->GetBufferSize(), &m_pInputLayout);
+	hr = _device->CreateInputLayout(_inputDesc, _numElements, m_pVertexShaderBuffer->GetBufferPointer(), m_pVertexShaderBuffer->GetBufferSize(), &m_pInputLayout);
 
 	if (FAILED(hr)) { return hr; }
 
 	return S_OK;
 }
 
-HRESULT Shaders::InitialisePixelShader(std::wstring _shaderPath)
+HRESULT Shaders::InitialisePixelShader(ID3D11Device* _device, std::wstring _shaderPath)
 {
 	HRESULT hr = D3DReadFileToBlob(_shaderPath.c_str(), &m_pPixelShaderBuffer);
 
 	if (FAILED(hr)) { return hr; }
 
-	hr = Renderer::GetInstance().GetDevice()->CreatePixelShader(m_pPixelShaderBuffer->GetBufferPointer(), m_pPixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader);
+	hr = _device->CreatePixelShader(m_pPixelShaderBuffer->GetBufferPointer(), m_pPixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader);
 
 	if (FAILED(hr)) { return hr; }
 

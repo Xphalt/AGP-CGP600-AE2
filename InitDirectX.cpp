@@ -79,7 +79,7 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
         hr = D3D11CreateDeviceAndSwapChain
         (
             NULL,
-            *GetDriverType(),
+            m_driverType,
             NULL,
             createDeviceFlags,
             featureLevels,
@@ -104,7 +104,7 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     (
         0,
         __uuidof(ID3D11Texture2D),
-        (LPVOID*)&pBackBuffer
+        reinterpret_cast<void**>(&pBackBuffer)
     );
 
     if (FAILED(hr)) { return hr; }
@@ -118,42 +118,7 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
         &Renderer::GetInstance().m_pRenderTargetView
     );
 
-    pBackBuffer->Release();
-
     if (FAILED(hr)) { return hr; }
-
-    Renderer::GetInstance().m_pDeviceContext->OMSetRenderTargets
-    (
-        1,
-        &Renderer::GetInstance().m_pRenderTargetView,
-        NULL
-    );
-#pragma endregion
-
-#pragma region Create and set the viewport
-    D3D11_VIEWPORT viewport;
-
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.Width = (FLOAT)width;
-    viewport.Height = (FLOAT)height;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-
-    Renderer::GetInstance().m_pDeviceContext->RSSetViewports(1, &viewport);
-
-#pragma endregion
-
-#pragma region Create and set rasterizer state
-    D3D11_RASTERIZER_DESC rastDesc;
-    ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
-    rastDesc.FillMode = D3D11_FILL_SOLID;
-    rastDesc.CullMode = D3D11_CULL_BACK;
-
-    hr = Renderer::GetInstance().GetDevice()->CreateRasterizerState(&rastDesc, &Renderer::GetInstance().m_pRasterState);
-
-    if (FAILED(hr)) { return hr; }
-
 #pragma endregion
 
 #pragma region Create and set depth stencil
@@ -172,7 +137,11 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
 
     hr = Renderer::GetInstance().m_pDevice->CreateTexture2D(&depthStencilDesc, NULL, &Renderer::GetInstance().m_pDSB);
 
+    if (FAILED(hr)) { return hr; }
+
     hr = Renderer::GetInstance().m_pDevice->CreateDepthStencilView(Renderer::GetInstance().m_pDSB, NULL, &Renderer::GetInstance().m_pDSV);
+
+    if (FAILED(hr)) { return hr; }
 
     Renderer::GetInstance().m_pDeviceContext->OMSetRenderTargets(1, &Renderer::GetInstance().m_pRenderTargetView, Renderer::GetInstance().m_pDSV);
 
@@ -185,8 +154,48 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
 
     hr = Renderer::GetInstance().m_pDevice->CreateDepthStencilState(&depthStencildesc, &Renderer::GetInstance().m_pDSS);
 
+    if (FAILED(hr)) { return hr; }
 #pragma endregion
 
+#pragma region Create and set the viewport
+    D3D11_VIEWPORT viewport;
+
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.Width = (FLOAT)width;
+    viewport.Height = (FLOAT)height;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+
+    Renderer::GetInstance().m_pDeviceContext->RSSetViewports(1, &viewport);
+#pragma endregion
+
+#pragma region Create and set rasterizer state
+    D3D11_RASTERIZER_DESC rastDesc;
+    ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
+    rastDesc.FillMode = D3D11_FILL_SOLID;
+    rastDesc.CullMode = D3D11_CULL_BACK;
+
+    hr = Renderer::GetInstance().GetDevice()->CreateRasterizerState(&rastDesc, &Renderer::GetInstance().m_pRasterState);
+
+    if (FAILED(hr)) { return hr; }
+#pragma endregion
+
+#pragma region Create and set sampler state
+    D3D11_SAMPLER_DESC sampDesc;
+    ZeroMemory(&sampDesc, sizeof(sampDesc));
+    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    hr = Renderer::GetInstance().m_pDevice->CreateSamplerState(&sampDesc, &Renderer::GetInstance().m_pSamplerState);
+
+    if (FAILED(hr)) { return hr; }
+#pragma endregion
 
     return S_OK;
 }
@@ -196,22 +205,26 @@ void InitDirectX::InitialiseShaders()
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "COLOUR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
     UINT numElements = ARRAYSIZE(layout);
 
-    Renderer::GetInstance().m_pShaders->InitialiseVertexShader(L"assets/shaders/VertexShader.cso", layout, numElements);
-    Renderer::GetInstance().m_pShaders->InitialisePixelShader(L"assets/shaders/PixelShader.cso");
+    Renderer::GetInstance().m_pShaders->InitialiseVertexShader(Renderer::GetInstance().m_pDevice, L"assets/shaders/VertexShader.cso", layout, numElements);
+    Renderer::GetInstance().m_pShaders->InitialisePixelShader(Renderer::GetInstance().m_pDevice, L"assets/shaders/PixelShader.cso");
 }
 
 HRESULT InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
 {
     Vertex vertex[] =
     {
-        /* Left point  */ Vertex(-0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f),
-        /* top point   */ Vertex( 0.0f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f),
-        /* Right point */ Vertex( 0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f),
+        Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left 
+        Vertex(-0.5f,   0.5f, 1.0f, 0.0f, 0.0f), //Top Left
+        Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right
+
+        Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left 
+        Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right
+        Vertex(0.5f,  -0.5f, 1.0f, 1.0f, 1.0f), //Bottom Right
     };
 
     D3D11_BUFFER_DESC vertexBufferDesc;
@@ -228,6 +241,10 @@ HRESULT InitDirectX::InitialiseVertexBuffer(HRESULT& hr)
     vertexBufferData.pSysMem = vertex;
 
     hr = Renderer::GetInstance().m_pDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &Renderer::GetInstance().m_pVertexBuffer);
+
+    if (FAILED(hr)) { return hr; }
+
+    D3DX11CreateShaderResourceViewFromFile(Renderer::GetInstance().m_pDevice, "assets/textures/BoxTexture.bmp", NULL, NULL, &Renderer::GetInstance().m_pTexture, NULL);
 
     if (FAILED(hr)) { return hr; }
 
