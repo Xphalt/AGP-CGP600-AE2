@@ -46,6 +46,6 @@ void Renderer::RenderFrame(void)
 	GetDeviceContext()->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetBufferAddress(), m_pVertexBuffer.GetStrideAddress(), &offset);
 	GetDeviceContext()->IASetIndexBuffer(m_pIndicesBuffer.GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
-	GetDeviceContext()->DrawIndexed(6, 0, 0);
+	GetDeviceContext()->DrawIndexed(m_pIndicesBuffer.BufferSize(), 0, 0);
 	GetSwapChain()->Present(1, NULL);
 }
