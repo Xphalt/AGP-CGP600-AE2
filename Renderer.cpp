@@ -32,7 +32,7 @@ void Renderer::RenderFrame(void)
 	GetDeviceContext()->ClearDepthStencilView(GetDSV(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	GetDeviceContext()->IASetInputLayout(GetShaders()->GetInputLayout());
-	GetDeviceContext()->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	GetDeviceContext()->RSSetState(GetRasterState());
 	GetDeviceContext()->OMSetDepthStencilState(GetDSS(), 0);
 	GetDeviceContext()->PSSetSamplers(0, 1, &m_pSamplerState);
@@ -42,8 +42,8 @@ void Renderer::RenderFrame(void)
 
 	UINT offset = 0;
 
-	m_pConstantBuffer.data.xOffSet = 0.0f;
-	m_pConstantBuffer.data.yOffSet = 0.0f;
+	m_pConstantBuffer.data.matrix = DirectX::XMMatrixTranslation(0.0f, 1.0f, 0.0f);
+	m_pConstantBuffer.data.matrix = DirectX::XMMatrixTranspose(m_pConstantBuffer.data.matrix);
 
 	if (FAILED(m_pConstantBuffer.ApplyChanges())) { return; };
 

@@ -238,7 +238,7 @@ HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
 
     if (FAILED(hr)) { return hr; }
 
-    D3DX11CreateShaderResourceViewFromFile(Renderer::GetInstance().m_pDevice, "assets/textures/BoxTexture.bmp", NULL, NULL, &Renderer::GetInstance().m_pTexture, NULL);
+    hr = D3DX11CreateShaderResourceViewFromFile(Renderer::GetInstance().m_pDevice, "BoxTexture.bmp", NULL, NULL, &Renderer::GetInstance().m_pTexture, NULL);
 
     if (FAILED(hr)) { return hr; }
 

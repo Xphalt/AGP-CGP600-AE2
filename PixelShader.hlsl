@@ -5,7 +5,7 @@ struct PS_INPUT
 };
 
 Texture2D objTexture : TEXTURE : register(t0);
-SamplerState objSamplerState : SAMPLER: register(s0);
+SamplerState objSamplerState : SAMPLER : register(s0);
 
 float4 main(PS_INPUT _input) : SV_TARGET
 {

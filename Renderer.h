@@ -7,6 +7,7 @@
 #define _XM_NO_INTRINSICS_
 #define XM_NO_ALIGNMENT
 #include <DirectXMath.h>
+#include "KeyboardInput.h"
 #include "Shaders.h"
 #include "Vertex.h"
 #include "VertexBuffer.h"
@@ -48,6 +49,7 @@ private:
 	ID3D11DeviceContext*	  m_pDeviceContext			{ nullptr };
 	IDXGISwapChain*			  m_pSwapChain				{ nullptr };
 	ID3D11RenderTargetView*   m_pRenderTargetView		{ nullptr };
+	KeyboardInput*			  m_pKeyboardInput			{ nullptr };
 	Shaders*				  m_pShaders			    { nullptr };
 	VertexBuffer<Vertex>	  m_pVertexBuffer;
 	ConstantBuffer<CB_VS>	  m_pConstantBuffer;
