@@ -17,6 +17,7 @@ Renderer::~Renderer()
 	if (m_pDSV != nullptr) { m_pDSV = nullptr; }
 	if (m_pRasterState != nullptr) { m_pRasterState = nullptr; }
 	if (m_pShaders != nullptr) { m_pShaders = nullptr; }
+	if (m_pCamera != nullptr) { m_pCamera = nullptr; }
 	if (m_pRenderTargetView != nullptr) { m_pRenderTargetView = nullptr; }
 	if (m_pSwapChain != nullptr) { m_pSwapChain = nullptr; }
 	if (m_pDeviceContext != nullptr) { m_pDeviceContext = nullptr; }
@@ -42,9 +43,15 @@ void Renderer::RenderFrame(void)
 
 	UINT offset = 0;
 
-	m_pConstantBuffer.data.matrix = DirectX::XMMatrixTranslation(0.0f, 1.0f, 0.0f);
-	m_pConstantBuffer.data.matrix = DirectX::XMMatrixTranspose(m_pConstantBuffer.data.matrix);
+	XMMATRIX world, view, projection, worldViewProjection;
 
+	//world = XMMatrixRotationX(XMConvertToRadians(m_degrees));
+	world = XMMatrixTranslation(0, 0, 5);
+	view = XMMatrixIdentity();
+	projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0), 640.0 / 480.0, 1.0, 100.0);
+	worldViewProjection = world * view * projection;
+	m_pConstantBuffer.data.WorldViewProjection = world * view * projection;
+	
 	if (FAILED(m_pConstantBuffer.ApplyChanges())) { return; };
 
 	GetDeviceContext()->VSSetConstantBuffers(0, 1, m_pConstantBuffer.GetBufferAddress());

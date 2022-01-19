@@ -7,6 +7,7 @@
 #define _XM_NO_INTRINSICS_
 #define XM_NO_ALIGNMENT
 #include <DirectXMath.h>
+#include "Camera.h"
 #include "KeyboardInput.h"
 #include "Shaders.h"
 #include "Vertex.h"
@@ -49,6 +50,7 @@ private:
 	ID3D11DeviceContext*	  m_pDeviceContext			{ nullptr };
 	IDXGISwapChain*			  m_pSwapChain				{ nullptr };
 	ID3D11RenderTargetView*   m_pRenderTargetView		{ nullptr };
+	Camera* m_pCamera{ nullptr };
 	KeyboardInput*			  m_pKeyboardInput			{ nullptr };
 	Shaders*				  m_pShaders			    { nullptr };
 	VertexBuffer<Vertex>	  m_pVertexBuffer;
@@ -60,4 +62,5 @@ private:
 	ID3D11DepthStencilState*  m_pDSS					{ nullptr };
 	ID3D11SamplerState*		  m_pSamplerState			{ nullptr };
 	ID3D11ShaderResourceView* m_pTexture				{ nullptr };
+	float m_degrees{ NULL };
 };

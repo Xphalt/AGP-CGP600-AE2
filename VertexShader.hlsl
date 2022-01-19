@@ -1,6 +1,6 @@
 cbuffer CBuffer : register(b0)
 {
-    float4x4 matrix_;
+    matrix WVPMatrix;
 };
 
 struct VS_INPUT
@@ -19,7 +19,7 @@ VS_OUTPUT main(VS_INPUT _input)
 {
     VS_OUTPUT output;
 
-    output.outPosition = mul(float4(_input.inPosition, 1.0f), matrix_);
+    output.outPosition = mul(WVPMatrix, _input.inPosition);
     output.outTexCoord = _input.inTexCoord;
 
     return output;
