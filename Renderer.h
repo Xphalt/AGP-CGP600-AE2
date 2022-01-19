@@ -54,7 +54,8 @@ private:
 	KeyboardInput*			  m_pKeyboardInput			{ nullptr };
 	Shaders*				  m_pShaders			    { nullptr };
 	VertexBuffer<Vertex>	  m_pVertexBuffer;
-	ConstantBuffer<CB_VS>	  m_pConstantBuffer;
+	ConstantBuffer<CB_VS_VertexShader> m_CB_VS_vertexShader;
+	ConstantBuffer<CB_PS_PixelShader> m_CB_PS_pixelShader;
 	IndicesBuffer			  m_pIndicesBuffer;
 	ID3D11RasterizerState*	  m_pRasterState			{ nullptr };
 	ID3D11DepthStencilView*   m_pDSV					{ nullptr };

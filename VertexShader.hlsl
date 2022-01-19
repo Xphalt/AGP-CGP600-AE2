@@ -1,4 +1,4 @@
-cbuffer CBuffer : register(b0)
+cbuffer worldPositionBuffer : register(b0)
 {
     matrix WVPMatrix;
 };

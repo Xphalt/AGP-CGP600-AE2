@@ -50,15 +50,18 @@ void Renderer::RenderFrame(void)
 	view = XMMatrixIdentity();
 	projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0), 640.0 / 480.0, 1.0, 100.0);
 	worldViewProjection = world * view * projection;
-	m_pConstantBuffer.data.WorldViewProjection = world * view * projection;
-	
-	if (FAILED(m_pConstantBuffer.ApplyChanges())) { return; };
 
-	GetDeviceContext()->VSSetConstantBuffers(0, 1, m_pConstantBuffer.GetBufferAddress());
+	m_CB_VS_vertexShader.data.WorldViewProjection = world * view * projection;
+	if (FAILED(m_CB_VS_vertexShader.ApplyChanges())) { return; };
+	GetDeviceContext()->VSSetConstantBuffers(0, 1, m_CB_VS_vertexShader.GetBufferAddress());
+	
+	m_CB_PS_pixelShader.data.alpha = 1.0f;
+	if (FAILED(m_CB_PS_pixelShader.ApplyChanges())) { return; };
+	GetDeviceContext()->PSSetConstantBuffers(0, 1, m_CB_PS_pixelShader.GetBufferAddress());
+	
 	GetDeviceContext()->PSSetShaderResources(0, 1, &m_pTexture);
 	GetDeviceContext()->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetBufferAddress(), m_pVertexBuffer.GetStrideAddress(), &offset);
 	GetDeviceContext()->IASetIndexBuffer(m_pIndicesBuffer.GetBuffer(), DXGI_FORMAT_R32_UINT, 0);
-
 	GetDeviceContext()->DrawIndexed(m_pIndicesBuffer.BufferSize(), 0, 0);
 	GetSwapChain()->Present(1, NULL);
 }

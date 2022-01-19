@@ -234,17 +234,25 @@ HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
 
     if (FAILED(hr)) { return hr; }
 
+    hr = Renderer::GetInstance().m_pVertexBuffer.Initialise(Renderer::GetInstance().m_pDevice, vertex, ARRAYSIZE(vertex));
+
+    if (FAILED(hr)) { return hr; }
+
     hr = Renderer::GetInstance().m_pIndicesBuffer.Initialise(Renderer::GetInstance().m_pDevice, indices, ARRAYSIZE(indices));
 
     if (FAILED(hr)) { return hr; }
 
-    hr = D3DX11CreateShaderResourceViewFromFile(Renderer::GetInstance().m_pDevice, "BoxTexture.bmp", NULL, NULL, &Renderer::GetInstance().m_pTexture, NULL);
+    hr = D3DX11CreateShaderResourceViewFromFile(Renderer::GetInstance().m_pDevice, "assets/textures/BoxTexture.bmp", NULL, NULL, &Renderer::GetInstance().m_pTexture, NULL);
 
     if (FAILED(hr)) { return hr; }
 
-    hr = Renderer::GetInstance().m_pConstantBuffer.Initialize(Renderer::GetInstance().m_pDevice, Renderer::GetInstance().m_pDeviceContext);
+    hr = Renderer::GetInstance().m_CB_VS_vertexShader.Initialize(Renderer::GetInstance().m_pDevice, Renderer::GetInstance().m_pDeviceContext);
 
     if (FAILED(hr)) { return hr; }
     
+    hr = Renderer::GetInstance().m_CB_PS_pixelShader.Initialize(Renderer::GetInstance().m_pDevice, Renderer::GetInstance().m_pDeviceContext);
+
+    if (FAILED(hr)) { return hr; }
+
     return S_OK;
 }
