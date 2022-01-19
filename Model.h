@@ -1,4 +1,7 @@
 #pragma once
+#include "VertexBuffer.h"
+#include "IndicesBuffer.h"
+#include "ConstantBuffer.h"
 #include "objfilemodel.h"
 
 class GameObject;
@@ -6,13 +9,11 @@ class GameObject;
 class Model
 {
 public:
-	Model(ID3D11Device* _device, ID3D11DeviceContext* _deviceContext);
 	~Model();
 
-	void Update(GameObject& _gameObject);
-	HRESULT LoadObjModel(char* _filename);
-	void Draw(XMMATRIX* _view, XMMATRIX* _projection);
-	void AddTexture(char* _filename);
+	HRESULT LoadObjModel(char* _filename, ID3D11Device* _device, ID3D11DeviceContext* _deviceContext, ID3D11ShaderResourceView* _texture, ConstantBuffer<CB_VS_VertexShader>& _cb_vs_vertexShader);
+	void Draw(const XMMATRIX& _viewProjectionMatrix);
+	void AddTexture(ID3D11ShaderResourceView* _texture);
 
 	// Getters
 	const float GetXPos() const { return m_x; }
@@ -42,16 +43,20 @@ public:
 	void IncScale(float _scale);
 
 private:
-	ID3D11Device* m_pD3DDevice;
-	ID3D11DeviceContext* m_pImmediateContext;
+	void UpdateWorldMatrix();
+
+	ID3D11Device* m_pDevice{ nullptr };
+	ID3D11DeviceContext* m_pDeviceContext{ nullptr };
+
+	ID3D11ShaderResourceView* m_pTexture{ nullptr };
+
+	ConstantBuffer<CB_VS_VertexShader> m_CB_VS_vertexShader;
+	VertexBuffer<Vertex> m_vertexBuffer;
+	IndicesBuffer m_indicesBuffer;
 
 	ObjFileModel* m_pObject;
-	ID3D11VertexShader* m_pVShader;
-	ID3D11PixelShader* m_pPShader;
-	ID3D11InputLayout* m_pInputLayout;
-	ID3D11Buffer* m_pConstantBuffer;
-	ID3D11ShaderResourceView* m_pTexture;
-	ID3D11SamplerState* m_pSampler;
+
+	XMMATRIX m_worldMatrix = XMMatrixIdentity();
 
 	float m_x, m_y, m_z;
 	float m_xAngle, m_yAngle, m_zAngle;
