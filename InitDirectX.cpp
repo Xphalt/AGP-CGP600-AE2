@@ -49,7 +49,34 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     UINT numFeatureLevels = ARRAYSIZE(featureLevels);
 #pragma endregion
 
-#pragma region Create and set device and swap chain
+    hr = InitSwapChain(width, height, numDriverTypes, driverTypes, hr, createDeviceFlags, featureLevels, numFeatureLevels);
+    if (FAILED(hr)) { return hr; }
+
+    ID3D11Texture2D* pBackBuffer{nullptr};
+
+    hr = InitBackBuffer(hr, pBackBuffer);
+    if (FAILED(hr)) { return hr; }
+
+    hr = InitRenderTargetView(hr, pBackBuffer);
+
+    if (FAILED(hr)) { return hr; }
+
+    hr = InitDepthStencil(width, height, hr);
+    if (FAILED(hr)) { return hr; }
+
+    InitViewport(width, height);
+
+    hr = InitRasteriserState(hr);
+    if (FAILED(hr)) { return hr; }
+
+    hr = InitSamplerState(hr);
+    if (FAILED(hr)) { return hr; }
+
+    return S_OK;
+}
+
+const HRESULT& InitDirectX::InitSwapChain(const UINT& width, const UINT& height, const UINT& numDriverTypes, D3D_DRIVER_TYPE  driverTypes[3], HRESULT& hr, const UINT& createDeviceFlags, D3D_FEATURE_LEVEL  featureLevels[3], const UINT& numFeatureLevels)
+{
     DXGI_SWAP_CHAIN_DESC scd;
     ZeroMemory(&scd, sizeof(scd));
 
@@ -96,10 +123,12 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     }
 
     if (FAILED(hr)) { return hr; }
-#pragma endregion
 
-#pragma region Create and set back buffer
-    ID3D11Texture2D* pBackBuffer{nullptr};
+    return S_OK;
+}
+
+const HRESULT& InitDirectX::InitBackBuffer(HRESULT& hr, ID3D11Texture2D*& pBackBuffer)
+{
     hr = Renderer::GetInstance().m_pSwapChain->GetBuffer
     (
         0,
@@ -108,9 +137,12 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     );
 
     if (FAILED(hr)) { return hr; }
-#pragma endregion
 
-#pragma region Create and set render target view
+    return S_OK;
+}
+
+const HRESULT& InitDirectX::InitRenderTargetView(HRESULT& hr, ID3D11Texture2D* pBackBuffer)
+{
     hr = Renderer::GetInstance().m_pDevice->CreateRenderTargetView
     (
         pBackBuffer,
@@ -119,10 +151,13 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     );
 
     if (FAILED(hr)) { return hr; }
-#pragma endregion
 
-#pragma region Create and set depth stencil
-    D3D11_TEXTURE2D_DESC depthStencilDesc{NULL};
+    return S_OK;
+}
+
+const HRESULT& InitDirectX::InitDepthStencil(const UINT& width, const UINT& height, HRESULT& hr)
+{
+    D3D11_TEXTURE2D_DESC depthStencilDesc{ NULL };
     depthStencilDesc.Width = width;
     depthStencilDesc.Height = height;
     depthStencilDesc.MipLevels = 1;
@@ -155,10 +190,13 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     hr = Renderer::GetInstance().m_pDevice->CreateDepthStencilState(&depthStencildesc, &Renderer::GetInstance().m_pDSS);
 
     if (FAILED(hr)) { return hr; }
-#pragma endregion
 
-#pragma region Create and set viewport
-    D3D11_VIEWPORT viewport{NULL};
+    return S_OK;
+}
+
+void InitDirectX::InitViewport(const UINT& width, const UINT& height)
+{
+    D3D11_VIEWPORT viewport{ NULL };
 
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
@@ -168,9 +206,10 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     viewport.MaxDepth = 1.0f;
 
     Renderer::GetInstance().m_pDeviceContext->RSSetViewports(1, &viewport);
-#pragma endregion
+}
 
-#pragma region Create and set rasterizer state
+const HRESULT& InitDirectX::InitRasteriserState(HRESULT& hr)
+{
     D3D11_RASTERIZER_DESC rastDesc;
     ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
     rastDesc.FillMode = D3D11_FILL_SOLID;
@@ -179,9 +218,12 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     hr = Renderer::GetInstance().GetDevice()->CreateRasterizerState(&rastDesc, &Renderer::GetInstance().m_pRasterState);
 
     if (FAILED(hr)) { return hr; }
-#pragma endregion
 
-#pragma region Create and set sampler state
+    return S_OK;
+}
+
+const HRESULT& InitDirectX::InitSamplerState(HRESULT& hr)
+{
     D3D11_SAMPLER_DESC sampDesc;
     ZeroMemory(&sampDesc, sizeof(sampDesc));
     sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -195,7 +237,6 @@ HRESULT InitDirectX::InitialiseDirectX(HRESULT& hr)
     hr = Renderer::GetInstance().m_pDevice->CreateSamplerState(&sampDesc, &Renderer::GetInstance().m_pSamplerState);
 
     if (FAILED(hr)) { return hr; }
-#pragma endregion
 
     return S_OK;
 }
@@ -231,27 +272,21 @@ HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
     };
 
     hr = Renderer::GetInstance().m_pVertexBuffer.Initialise(Renderer::GetInstance().m_pDevice, vertex, ARRAYSIZE(vertex));
-
     if (FAILED(hr)) { return hr; }
 
     hr = Renderer::GetInstance().m_pVertexBuffer.Initialise(Renderer::GetInstance().m_pDevice, vertex, ARRAYSIZE(vertex));
-
     if (FAILED(hr)) { return hr; }
 
     hr = Renderer::GetInstance().m_pIndicesBuffer.Initialise(Renderer::GetInstance().m_pDevice, indices, ARRAYSIZE(indices));
-
     if (FAILED(hr)) { return hr; }
 
     hr = D3DX11CreateShaderResourceViewFromFile(Renderer::GetInstance().m_pDevice, "assets/textures/BoxTexture.bmp", NULL, NULL, &Renderer::GetInstance().m_pTexture, NULL);
-
     if (FAILED(hr)) { return hr; }
 
     hr = Renderer::GetInstance().m_CB_VS_vertexShader.Initialize(Renderer::GetInstance().m_pDevice, Renderer::GetInstance().m_pDeviceContext);
-
     if (FAILED(hr)) { return hr; }
     
     hr = Renderer::GetInstance().m_CB_PS_pixelShader.Initialize(Renderer::GetInstance().m_pDevice, Renderer::GetInstance().m_pDeviceContext);
-
     if (FAILED(hr)) { return hr; }
 
     return S_OK;
