@@ -216,7 +216,6 @@ void InitDirectX::InitialiseShaders()
 
 HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
 {
-#pragma region Create and set vertex & indices buffer
     Vertex vertex[] =
     {
         Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left  - [0]
@@ -238,13 +237,14 @@ HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
     hr = Renderer::GetInstance().m_pIndicesBuffer.Initialise(Renderer::GetInstance().m_pDevice, indices, ARRAYSIZE(indices));
 
     if (FAILED(hr)) { return hr; }
-#pragma endregion
 
-#pragma region Load texture
     D3DX11CreateShaderResourceViewFromFile(Renderer::GetInstance().m_pDevice, "assets/textures/BoxTexture.bmp", NULL, NULL, &Renderer::GetInstance().m_pTexture, NULL);
 
     if (FAILED(hr)) { return hr; }
 
+    hr = Renderer::GetInstance().m_pConstantBuffer.Initialize(Renderer::GetInstance().m_pDevice, Renderer::GetInstance().m_pDeviceContext);
+
+    if (FAILED(hr)) { return hr; }
+    
     return S_OK;
-#pragma endregion
 }

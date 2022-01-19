@@ -42,6 +42,12 @@ void Renderer::RenderFrame(void)
 
 	UINT offset = 0;
 
+	m_pConstantBuffer.data.xOffSet = 0.0f;
+	m_pConstantBuffer.data.yOffSet = 0.0f;
+
+	if (FAILED(m_pConstantBuffer.ApplyChanges())) { return; };
+
+	GetDeviceContext()->VSSetConstantBuffers(0, 1, m_pConstantBuffer.GetBufferAddress());
 	GetDeviceContext()->PSSetShaderResources(0, 1, &m_pTexture);
 	GetDeviceContext()->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetBufferAddress(), m_pVertexBuffer.GetStrideAddress(), &offset);
 	GetDeviceContext()->IASetIndexBuffer(m_pIndicesBuffer.GetBuffer(), DXGI_FORMAT_R32_UINT, 0);

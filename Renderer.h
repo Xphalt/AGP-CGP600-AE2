@@ -11,6 +11,7 @@
 #include "Vertex.h"
 #include "VertexBuffer.h"
 #include "IndicesBuffer.h"
+#include "ConstantBuffer.h"
 
 using namespace DirectX;
 
@@ -49,6 +50,7 @@ private:
 	ID3D11RenderTargetView*   m_pRenderTargetView		{ nullptr };
 	Shaders*				  m_pShaders			    { nullptr };
 	VertexBuffer<Vertex>	  m_pVertexBuffer;
+	ConstantBuffer<CB_VS>	  m_pConstantBuffer;
 	IndicesBuffer			  m_pIndicesBuffer;
 	ID3D11RasterizerState*	  m_pRasterState			{ nullptr };
 	ID3D11DepthStencilView*   m_pDSV					{ nullptr };

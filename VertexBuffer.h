@@ -1,7 +1,7 @@
 #pragma once
 #include "d3d11.h"
 
-template<class T>
+template<typename T>
 class VertexBuffer
 {
 public:
