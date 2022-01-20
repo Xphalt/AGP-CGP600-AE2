@@ -29,6 +29,5 @@ VOut ModelVS(float4 position : POSITION, float4 colour : COLOR, float2 texcoord 
 
 float4 ModelPS(float4 position : SV_POSITION, float4 colour : COLOR, float2 texcoord : TEXCOORD) : SV_TARGET
 {
-	//return (1.0f, 1.0f, 1.0f, 1.0f);
 	return texture0.Sample(sampler0, texcoord) * colour;
 }
