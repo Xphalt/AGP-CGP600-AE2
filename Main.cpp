@@ -14,28 +14,29 @@
 #include "Camera.h"
 #include "text2D.h"
 #include "Model.h"
+#include "SceneNode.h"
 
 using namespace DirectX;
 #pragma endregion
 
 #pragma region GlobalVars
-struct POS_COL_TEX_NORM_VERTEX
-{
-    XMFLOAT3 pos;
-    XMFLOAT4 col;
-    XMFLOAT2 texture0;
-    XMFLOAT3 normal;
-};
-
-struct CONSTANT_BUFFER0
-{
-    XMMATRIX WorldViewProjection;               // 64 bytes
-    XMVECTOR directional_light_vector;          // 16 bytes
-    XMVECTOR directional_light_colour;          // 16 bytes
-    XMVECTOR ambient_light_colour;              // 16 bytes
-
-    // TOTAL SIZE = 112 bytes
-};
+//struct POS_COL_TEX_NORM_VERTEX
+//{
+//    XMFLOAT3 pos;
+//    XMFLOAT4 col;
+//    XMFLOAT2 texture0;
+//    XMFLOAT3 normal;
+//};
+//
+//struct CONSTANT_BUFFER0
+//{
+//    XMMATRIX WorldViewProjection;               // 64 bytes
+//    XMVECTOR directional_light_vector;          // 16 bytes
+//    XMVECTOR directional_light_colour;          // 16 bytes
+//    XMVECTOR ambient_light_colour;              // 16 bytes
+//
+//    // TOTAL SIZE = 112 bytes
+//};
 
 HINSTANCE g_hInst = NULL;
 HWND g_hWnd = NULL;
@@ -50,8 +51,6 @@ ID3D11Buffer* g_pVertexBuffer;
 ID3D11VertexShader* g_pVertexShader;
 ID3D11PixelShader* g_pPixelShader;
 ID3D11InputLayout* g_pInputLayout;
-ID3D11Buffer* g_pConstantBuffer0;
-CONSTANT_BUFFER0 cb0_values;
 ID3D11DepthStencilView* g_pZBuffer;
 ID3D11DepthStencilState* g_pDepthStateTrue;
 ID3D11DepthStencilState* g_pDepthStateFalse;
@@ -67,6 +66,9 @@ XMVECTOR g_directional_light_shines_from;
 XMVECTOR g_directional_light_colour;
 XMVECTOR g_ambient_light_colour;
 KeyboardInput* g_pInput;
+SceneNode* g_pRootNode;
+SceneNode* g_pNode1;
+SceneNode* g_pNode2;
 
 Model* g_pPlayer;
 Model* g_pEnemy;
@@ -391,15 +393,26 @@ HRESULT InitialiseGraphics()
     HRESULT hr = S_OK;
 
     g_camera = new Camera(0.0f, 0.0f, -5.0f, 0.0f);
+
+    //g_pRootNode = new SceneNode();
+    //g_pNode1 = new SceneNode();
+    //g_pNode2 = new SceneNode();
+
     g_pPlayer = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
+    g_pPlayer->AddTexture((char*)"assets/BoxTexture.bmp");
+    //g_pNode1->SetModel(g_pPlayer);
+    //g_pRootNode->AddChildNode(g_pNode1);
+
     g_pEnemy = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
+    g_pEnemy->AddTexture((char*)"assets/BoxTexture.bmp");
+    //g_pNode2->SetModel(g_pEnemy);
+    //g_pNode1->AddChildNode(g_pNode2);
+    
     g_pPlayer->InitObjModel();
     g_pPlayer->SetXPos(-2);
     g_pEnemy-> InitObjModel();
     g_pEnemy->SetXPos(2);
     g_pEnemy->SetScale(0.5);
-    g_pPlayer->AddTexture((char*)"assets/BoxTexture.bmp");
-    g_pEnemy->AddTexture((char*)"assets/BoxTexture.bmp");
 
     return hr;
 }
@@ -428,7 +441,7 @@ void RenderFrame(void)
     g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, rgba_clear_colour);
     g_pImmediateContext->ClearDepthStencilView(g_pZBuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-    XMMATRIX view, projection;
+    XMMATRIX world, view, projection;
     view = g_camera->GetViewMatrix();
     projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(90), 640.0 / 480.0, 1.0, 100.0);
 
@@ -436,10 +449,16 @@ void RenderFrame(void)
     g_pImmediateContext->OMSetBlendState(g_pAlphaBlendEnable, 0, 0xffffffff);
     g_pImmediateContext->OMSetBlendState(g_pAlphaBlendDisable, 0, 0xffffffff);
 
-    //g_pImmediateContext->RSSetState(rastStateCullBack);
+    g_pImmediateContext->RSSetState(rastStateCullBack);
+
+
     g_pPlayer->Draw(&view, &projection);
     g_pEnemy->Draw(&view, &projection);
-    //g_pImmediateContext->RSSetState(rastStateCullNone);
+
+    //world = XMMatrixIdentity();
+    //g_pRootNode->Execute(&world, &view, &projection);
+
+    g_pImmediateContext->RSSetState(rastStateCullNone);
     g_2DText->RenderText();
     g_pSwapChain->Present(0, 0);
 }

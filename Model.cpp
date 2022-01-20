@@ -1,19 +1,12 @@
 #include "Model.h"
-
-struct POS_COL_TEX_NORM_VERTEX
-{
-	XMFLOAT3 pos;
-	XMFLOAT4 col;
-	XMFLOAT2 texture0;
-	XMFLOAT3 normal;
-};
+#include "SceneNode.h"
 
 struct CONSTANT_BUFFER0
 {
 	XMMATRIX WorldViewProjection;               // 64 bytes
-	//XMVECTOR directional_light_vector;          // 16 bytes
-	//XMVECTOR directional_light_colour;          // 16 bytes
-	//XMVECTOR ambient_light_colour;              // 16 bytes
+	XMVECTOR directional_light_vector;          // 16 bytes
+	XMVECTOR directional_light_colour;          // 16 bytes
+	XMVECTOR ambient_light_colour;              // 16 bytes
 
 	// TOTAL SIZE = 112 bytes
 };
@@ -111,8 +104,8 @@ HRESULT Model::InitObjModel()
 void Model::Draw(XMMATRIX* _view, XMMATRIX* _projection)
 {
 	// Create transformation
-	XMMATRIX world;
 
+	XMMATRIX world;
 	world = XMMatrixIdentity();
 	world *= XMMatrixScaling(m_scale, m_scale, m_scale);
 	world *= XMMatrixRotationX(XMConvertToRadians(m_xAngle));
@@ -121,8 +114,9 @@ void Model::Draw(XMMATRIX* _view, XMMATRIX* _projection)
 	world *= XMMatrixTranslation(m_x, m_y, m_z);
 
 	// Create constant buffer structure
+
 	CONSTANT_BUFFER0 model_cb_values;
-	model_cb_values.WorldViewProjection = world * (*_view) * (*_projection);
+	model_cb_values.WorldViewProjection = (world) * (*_view) * (*_projection);
 
 	// Set constant buffer to be the active one
 	m_pImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBuffer);
