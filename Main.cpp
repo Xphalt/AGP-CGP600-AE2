@@ -1,43 +1,20 @@
-#pragma region Includes
-// IMPORTANT: Includes must be in this order:
 #include <d3d11.h>
 #include <dxgi.h>
 #include <D3DX11.h>
 #include <windows.h>
 #include <dxerr.h>
-/* Use these defines when using DirectXMath
-   Make sure they are before the include */
+#include <dinput.h>
 #define _XM_NO_INTRINSICS_
 #define XM_NO_ALIGNMENT
 #include <DirectXMath.h>
-#include "KeyboardInput.h"
 #include "Camera.h"
 #include "text2D.h"
 #include "Model.h"
-#include "SceneNode.h"
+//#include "SceneNode.h"
 
 using namespace DirectX;
-#pragma endregion
 
 #pragma region GlobalVars
-//struct POS_COL_TEX_NORM_VERTEX
-//{
-//    XMFLOAT3 pos;
-//    XMFLOAT4 col;
-//    XMFLOAT2 texture0;
-//    XMFLOAT3 normal;
-//};
-//
-//struct CONSTANT_BUFFER0
-//{
-//    XMMATRIX WorldViewProjection;               // 64 bytes
-//    XMVECTOR directional_light_vector;          // 16 bytes
-//    XMVECTOR directional_light_colour;          // 16 bytes
-//    XMVECTOR ambient_light_colour;              // 16 bytes
-//
-//    // TOTAL SIZE = 112 bytes
-//};
-
 HINSTANCE g_hInst = NULL;
 HWND g_hWnd = NULL;
 char g_WindowName[100] = "CGP600 - AE2";
@@ -65,10 +42,13 @@ ID3D11RasterizerState* rastStateCullBack;
 XMVECTOR g_directional_light_shines_from;
 XMVECTOR g_directional_light_colour;
 XMVECTOR g_ambient_light_colour;
-KeyboardInput* g_pInput;
 SceneNode* g_pRootNode;
 SceneNode* g_pNode1;
 SceneNode* g_pNode2;
+
+IDirectInput8* m_pDirectInput;
+IDirectInputDevice8* m_pKeyboardDevice;
+unsigned char m_keyboardKeyStates[256];
 
 Model* g_pPlayer;
 Model* g_pEnemy;
@@ -77,30 +57,28 @@ Model* g_pEnemy;
 #pragma region ForwardDeclarations
 HRESULT InitialiseWindow(HINSTANCE hInstance, int nCmdShow);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+HRESULT Initialise(HINSTANCE _hInstance, HWND _hwnd);
+void ReadInputStates();
 HRESULT InitialiseD3D();
 void ShutdownD3D();
 void RenderFrame(void);
 HRESULT InitialiseGraphics(void);
+bool IsKeyPressed(unsigned char _keycode);
+
 #pragma endregion
 
-#pragma region EntryPoint
-// Entry point
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    if (FAILED(InitialiseWindow(hInstance, nCmdShow)))
+    if (FAILED(InitialiseWindow(g_hInst, nCmdShow)))
     {
         DXTRACE_MSG("Failed to create window");
         return 0;
     }
 
-    //if (FAILED(g_pInput->Initialise(g_hInst, g_hWnd)))
-    //{
-    //    DXTRACE_MSG("Failed to create input device");
-    //    return 0;
-    //}
+    Initialise(g_hInst, g_hWnd);
 
     if (FAILED(InitialiseD3D()))
     {
@@ -114,7 +92,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         return 0;
     }
 
-    // Main message loop
     MSG msg = { 0 };
 
     while (msg.message != WM_QUIT)
@@ -127,6 +104,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
         else
         {
+            if (IsKeyPressed(DIK_ESCAPE)) { DestroyWindow(g_hWnd); }
             RenderFrame();
         }
     }
@@ -135,16 +113,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
     return (int)msg.wParam;
 }
-#pragma endregion
 
-#pragma region CreateWindow
-// Register class and create window
 HRESULT InitialiseWindow(HINSTANCE hInstance, int nCmdShow)
 {
-    // Give app name
     char Name[100] = "CGP600 - AE2 Game\0";
 
-    // Register class
     WNDCLASSEX wcex = { 0 };
     wcex.cbSize = sizeof(WNDCLASSEX);
     wcex.style = CS_HREDRAW | CS_VREDRAW;
@@ -159,7 +132,6 @@ HRESULT InitialiseWindow(HINSTANCE hInstance, int nCmdShow)
 
     if (!RegisterClassEx(&wcex)) { return E_FAIL; }
 
-    // Create window
     g_hInst = hInstance;
     RECT rc = { 0, 0, 640, 480 };
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
@@ -172,10 +144,7 @@ HRESULT InitialiseWindow(HINSTANCE hInstance, int nCmdShow)
 
     return S_OK;
 }
-#pragma endregion
 
-#pragma region RecieveMessage
-// Called every time the app recieves a message
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps;
@@ -205,9 +174,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     return 0;
 }
-#pragma endregion
 
-#pragma region InitialiseD3D
 HRESULT InitialiseD3D()
 {
     HRESULT hr = S_OK;
@@ -225,11 +192,7 @@ HRESULT InitialiseD3D()
 
     D3D_DRIVER_TYPE driverTypes[] =
     { 
-        /* Comment out this line if you need functionallity on hardware
-        that doesn't support it */
         D3D_DRIVER_TYPE_HARDWARE,
-
-        /* Comment out this line to use reference device */
         D3D_DRIVER_TYPE_WARP,
         D3D_DRIVER_TYPE_REFERENCE, 
     };
@@ -270,20 +233,17 @@ HRESULT InitialiseD3D()
 
     if (FAILED(hr)) { return hr; }
 
-    // Get pointer to back buffer texture
     ID3D11Texture2D *pBackBufferTexture;
     hr = g_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
                                 (LPVOID*)&pBackBufferTexture);
 
     if (FAILED(hr)) { return hr; }
 
-    // Use the back buffer texture pointer to create the render target view
     hr = g_pD3DDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &g_pBackBufferRTView);
     pBackBufferTexture->Release();
 
     if (FAILED(hr)) { return hr; }
 
-    // Create a Z buffer texture
     D3D11_TEXTURE2D_DESC tex2dDesc;
     ZeroMemory(&tex2dDesc, sizeof(tex2dDesc));
 
@@ -301,7 +261,6 @@ HRESULT InitialiseD3D()
 
     if (FAILED(hr)) { return hr; }
 
-    // Create the Z buffer
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
     ZeroMemory(&dsvDesc, sizeof(dsvDesc));
 
@@ -311,7 +270,6 @@ HRESULT InitialiseD3D()
     g_pD3DDevice->CreateDepthStencilView(pZBufferTexture, &dsvDesc, &g_pZBuffer);
     pZBufferTexture->Release();
 
-    // Create Depth Stencil
     D3D11_DEPTH_STENCIL_DESC depthDesc;
     ZeroMemory(&depthDesc, sizeof(depthDesc));
     depthDesc.DepthEnable = true;
@@ -326,10 +284,8 @@ HRESULT InitialiseD3D()
     hr = g_pD3DDevice->CreateDepthStencilState(&depthDesc, &g_pDepthStateFalse);
     if (FAILED(hr)) { return hr; }
 
-    // Set the render target view
     g_pImmediateContext->OMSetRenderTargets(1, &g_pBackBufferRTView, g_pZBuffer);
 
-    // Set the viewport
     D3D11_VIEWPORT viewport;
 
     viewport.TopLeftX = 0;
@@ -386,7 +342,6 @@ HRESULT InitialiseD3D()
 
     return S_OK;
 }
-#pragma endregion
 
 HRESULT InitialiseGraphics()
 {
@@ -417,7 +372,6 @@ HRESULT InitialiseGraphics()
     return hr;
 }
 
-#pragma region ShutdownD3D
 void ShutdownD3D()
 {
     if (g_2DText) { delete g_2DText; };
@@ -431,9 +385,7 @@ void ShutdownD3D()
     if (g_pPlayer) { delete g_pPlayer; }
     if (g_pD3DDevice) { g_pD3DDevice->Release(); }
 }
-#pragma endregion
 
-#pragma region RenderFrame
 void RenderFrame(void)
 {
     g_pImmediateContext->OMSetDepthStencilState(g_pDepthStateTrue, 1);
@@ -462,4 +414,36 @@ void RenderFrame(void)
     g_2DText->RenderText();
     g_pSwapChain->Present(0, 0);
 }
-#pragma endregion
+
+HRESULT Initialise(HINSTANCE _hInstance, HWND _hwnd)
+{
+    HRESULT hr;
+    ZeroMemory(m_keyboardKeyStates, sizeof(m_keyboardKeyStates));
+    hr = DirectInput8Create(_hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_pDirectInput, NULL);
+
+    if (FAILED(hr)) { return hr; }
+
+    hr = m_pDirectInput->CreateDevice(GUID_SysKeyboard, &m_pKeyboardDevice, NULL);
+
+    if (FAILED(hr)) { return hr; }
+
+    hr = m_pKeyboardDevice->SetCooperativeLevel(_hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+
+    if (FAILED(hr)) { return hr; }
+
+    hr = m_pKeyboardDevice->Acquire();
+
+    if (FAILED(hr)) { return hr; }
+
+    return S_OK;
+}
+
+void ReadInputStates()
+{
+    HRESULT hr;
+    hr = m_pKeyboardDevice->GetDeviceState(sizeof(m_keyboardKeyStates), (LPVOID)&m_keyboardKeyStates);
+
+    if (FAILED(hr)) { if ((hr == DIERR_INPUTLOST) || (hr == DIERR_NOTACQUIRED)) { m_pKeyboardDevice->Acquire(); } }
+}
+
+bool IsKeyPressed(unsigned char _keycode) { return m_keyboardKeyStates[_keycode] & 0x80; }

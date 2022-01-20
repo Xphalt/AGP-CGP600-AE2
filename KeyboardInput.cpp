@@ -1,4 +1,9 @@
 #include "KeyboardInput.h"
+#include <d3d11.h>
+#include <dxgi.h>
+#include <D3DX11.h>
+#include <windows.h>
+#include <dxerr.h>
 
 KeyboardInput::~KeyboardInput()
 {
