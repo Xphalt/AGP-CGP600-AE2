@@ -3,14 +3,15 @@
 #include <D3DX11.h>
 #include <windows.h>
 #include <dxerr.h>
-#include <dinput.h>
 #define _XM_NO_INTRINSICS_
 #define XM_NO_ALIGNMENT
 #include <DirectXMath.h>
 #include "Camera.h"
 #include "text2D.h"
 #include "Model.h"
+#include <dinput.h>
 
+#pragma region MyRegion
 /****************************************************************************
  *
  *      DirectInput keyboard scan codes
@@ -179,6 +180,7 @@
 #define DIK_RIGHTARROW      DIK_RIGHT           /* RightArrow on arrow keypad */
 #define DIK_DOWNARROW       DIK_DOWN            /* DownArrow on arrow keypad */
 #define DIK_PGDN            DIK_NEXT            /* PgDn on arrow keypad */
+#pragma endregion
 
 
 using namespace DirectX;
@@ -207,6 +209,7 @@ IDirectInput8* m_pDirectInput;
 IDirectInputDevice8* m_pKeyboardDevice;
 unsigned char m_keyboardKeyStates[256];
 
+Model* g_pFloor;
 Model* g_pPlayer;
 Model* g_pEnemy;
 #pragma endregion
@@ -218,7 +221,7 @@ HRESULT InitialiseD3D();
 void ShutdownD3D();
 void RenderFrame(void);
 HRESULT InitialiseGraphics(void);
-HRESULT Initialise(HINSTANCE _hInstance, HWND _hwnd);
+HRESULT Initialise();
 void ReadInputStates();
 bool IsKeyPressed(unsigned char _keycode) { return m_keyboardKeyStates[_keycode] & 0x80; }
 
@@ -229,13 +232,17 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    if (FAILED(InitialiseWindow(g_hInst, nCmdShow)))
+    if (FAILED(InitialiseWindow(hInstance, nCmdShow)))
     {
         DXTRACE_MSG("Failed to create window");
         return 0;
     }
 
-    Initialise(g_hInst, g_hWnd);
+    if (FAILED(Initialise()))
+    {
+        DXTRACE_MSG("Failed to initialise Input");
+        return 0;
+    }
 
     if (FAILED(InitialiseD3D()))
     {
@@ -248,6 +255,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         DXTRACE_MSG("Failed to initialise graphics");
         return 0;
     }
+
 
     MSG msg = { 0 };
 
@@ -317,12 +325,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
         break;
 
-    case WM_KEYDOWN:
-        if (wParam == VK_ESCAPE)
-        {
-            DestroyWindow(g_hWnd);
-            return 0;
-        }
+    //case WM_KEYDOWN:
+    //    if (wParam == VK_ESCAPE)
+    //    {
+    //        DestroyWindow(g_hWnd);
+    //        return 0;
+    //    }
 
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -505,18 +513,21 @@ HRESULT InitialiseGraphics()
 
     g_camera = new Camera(0.0f, 0.0f, -5.0f, 0.0f);
 
+    g_pFloor = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
+    g_pFloor->InitObjModel();
+    g_pFloor->SetScale(5);
+    g_pFloor->SetYPos(-5);
+
     g_pPlayer = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
     g_pPlayer->AddTexture((char*)"assets/BoxTexture.bmp");
-
+    g_pPlayer->InitObjModel();
+    g_pPlayer->SetXPos(-2);
 
     g_pEnemy = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
     g_pEnemy->AddTexture((char*)"assets/BoxTexture.bmp");
-
-    g_pPlayer->InitObjModel();
-    g_pPlayer->SetXPos(-2);
-    g_pEnemy-> InitObjModel();
-    g_pEnemy->SetXPos(2);
+    g_pEnemy->InitObjModel();
     g_pEnemy->SetScale(0.5);
+    g_pEnemy->SetXPos(2);
 
     return hr;
 }
@@ -525,6 +536,7 @@ void ShutdownD3D()
 {
     if (g_pEnemy) { delete g_pEnemy; }
     if (g_pPlayer) { delete g_pPlayer; }
+    if (g_pFloor) { delete g_pFloor; }
     if (g_camera) { delete g_camera; }
     if (g_2DText) { delete g_2DText; };
     if (rastStateCullBack) { rastStateCullBack->Release(); }
@@ -561,6 +573,7 @@ void RenderFrame(void)
     g_pImmediateContext->RSSetState(rastStateCullBack);
 
 
+    g_pFloor->Draw(&view, &projection);
     g_pPlayer->Draw(&view, &projection);
     g_pEnemy->Draw(&view, &projection);
 
@@ -572,11 +585,11 @@ void RenderFrame(void)
     g_pSwapChain->Present(0, 0);
 }
 
-HRESULT Initialise(HINSTANCE _hInstance, HWND _hwnd)
+HRESULT Initialise()
 {
     HRESULT hr;
     ZeroMemory(m_keyboardKeyStates, sizeof(m_keyboardKeyStates));
-    hr = DirectInput8Create(_hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_pDirectInput, NULL);
+    hr = DirectInput8Create(g_hInst, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_pDirectInput, NULL);
 
     if (FAILED(hr)) { return hr; }
 
@@ -584,7 +597,10 @@ HRESULT Initialise(HINSTANCE _hInstance, HWND _hwnd)
 
     if (FAILED(hr)) { return hr; }
 
-    hr = m_pKeyboardDevice->SetCooperativeLevel(_hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+    hr = m_pKeyboardDevice->SetDataFormat(&c_dfDIKeyboard);
+    if (FAILED(hr)) return hr;
+
+    hr = m_pKeyboardDevice->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
 
     if (FAILED(hr)) { return hr; }
 
@@ -594,6 +610,20 @@ HRESULT Initialise(HINSTANCE _hInstance, HWND _hwnd)
 
     return S_OK;
 }
+
+//HRESULT InitialiseInput(void)
+//{
+//    hr = g_keyboard_device->SetDataFormat(&c_dfDIKeyboard);
+//    if (FAILED(hr)) return hr;
+//
+//    hr = g_keyboard_device->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+//    if (FAILED(hr)) return hr;
+//
+//    hr = g_keyboard_device->Acquire();
+//    if (FAILED(hr)) return hr;
+//
+//    return S_OK;
+//}
 
 void ReadInputStates()
 {
