@@ -12,6 +12,12 @@ public:
 	void Draw(XMMATRIX* _view, XMMATRIX* _projection);
 	void AddTexture(char* _filename);
 
+	XMVECTOR GetBoundingSphereWorldSpacePosition();
+	float GetBoundingSphereRadius();
+	void CalculateModelCentrePoint();
+	void CalculateBoundingSphereRadius();
+	bool CheckCollision(Model* _model);
+
 	// Setters
 	void SetXPos(float _xPos);
 	void SetYPos(float _yPos);
@@ -54,4 +60,8 @@ private:
 	float m_x, m_y, m_z;
 	float m_xAngle, m_yAngle, m_zAngle;
 	float m_scale;
+
+	float m_boundingSphereCentreX, m_boundingSphereCentreY, m_boundingSphereCentreZ;
+	float m_boundingSphereRadius;
+	
 };

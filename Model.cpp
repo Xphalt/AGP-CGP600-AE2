@@ -96,7 +96,8 @@ HRESULT Model::InitObjModel()
 	constant_buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	hr = m_pD3DDevice->CreateBuffer(&constant_buffer_desc, NULL, &m_pConstantBuffer);
 
-	if (FAILED(hr)) { return hr; }
+	CalculateModelCentrePoint();
+	CalculateBoundingSphereRadius();
 
 	return S_OK;
 }
@@ -223,3 +224,103 @@ void Model::IncScale(float _scale)
 	m_scale += _scale;
 }
 #pragma endregion
+
+XMVECTOR Model::GetBoundingSphereWorldSpacePosition()
+{
+	XMMATRIX world = XMMatrixIdentity();
+
+	world *= XMMatrixScaling(m_scale, m_scale, m_scale);
+	world *= XMMatrixRotationX(XMConvertToRadians(m_xAngle));
+	world *= XMMatrixRotationY(XMConvertToRadians(m_yAngle));
+	world *= XMMatrixRotationZ(XMConvertToRadians(m_zAngle));
+	world *= XMMatrixTranslation(m_boundingSphereCentreX, m_boundingSphereCentreY, m_boundingSphereCentreZ);
+
+	XMVECTOR offset;
+	offset = XMVectorSet(m_x, m_y, m_z, 0.0);
+	offset = XMVector3Transform(offset, world);
+	return offset;
+}
+
+float Model::GetBoundingSphereRadius()
+{
+	return (m_boundingSphereRadius * m_scale);
+}
+
+void Model::CalculateModelCentrePoint()
+{
+	float minx = m_pObject->vertices[0].Pos.x;
+	float miny = m_pObject->vertices[0].Pos.y;
+	float minz = m_pObject->vertices[0].Pos.z;
+	float maxx = m_pObject->vertices[0].Pos.x;
+	float maxy = m_pObject->vertices[0].Pos.y;
+	float maxz = m_pObject->vertices[0].Pos.z;
+
+	for (int i = 1; i < m_pObject->numverts; i++)
+	{
+		if (m_pObject->vertices[i].Pos.x < minx)
+		{
+			minx = m_pObject->vertices[i].Pos.x;
+		}
+		else if (m_pObject->vertices[i].Pos.x > maxx)
+		{
+			maxx = m_pObject->vertices[i].Pos.x;
+		}
+		if (m_pObject->vertices[i].Pos.y < miny)
+		{
+			miny = m_pObject->vertices[i].Pos.y;
+		}
+		else if (m_pObject->vertices[i].Pos.y > maxy)
+		{
+			maxy = m_pObject->vertices[i].Pos.y;
+		}
+		if (m_pObject->vertices[i].Pos.z < minz)
+		{
+			minz = m_pObject->vertices[i].Pos.z;
+		}
+		else if (m_pObject->vertices[i].Pos.z > maxz)
+		{
+			maxz = m_pObject->vertices[i].Pos.z;
+		}
+	}
+
+	m_boundingSphereCentreX = (minx + maxx) / 2;
+	m_boundingSphereCentreY = (miny + maxy) / 2;
+	m_boundingSphereCentreZ = (minz + maxz) / 2;
+
+}
+
+void Model::CalculateBoundingSphereRadius()
+{
+	float maxDist = 0, checkDist;
+	for (int i = 0; i < m_pObject->numverts; i++)
+	{
+		checkDist = sqrt(powf((m_boundingSphereCentreX - m_pObject->vertices[i].Pos.x), 2) + powf((m_boundingSphereCentreY - m_pObject->vertices[i].Pos.y), 2) + powf((m_boundingSphereCentreZ - m_pObject->vertices[i].Pos.z), 2));
+		if (checkDist >= maxDist)	maxDist = checkDist;
+	}
+
+	m_boundingSphereRadius = maxDist;
+}
+
+bool Model::CheckCollision(Model* model)
+{
+	if (model == this)	return false;
+
+	float x1 = XMVectorGetX(model->GetBoundingSphereWorldSpacePosition());
+	float y1 = XMVectorGetY(model->GetBoundingSphereWorldSpacePosition());
+	float z1 = XMVectorGetZ(model->GetBoundingSphereWorldSpacePosition());
+	float x2 = XMVectorGetX(this->GetBoundingSphereWorldSpacePosition());
+	float y2 = XMVectorGetY(this->GetBoundingSphereWorldSpacePosition());
+	float z2 = XMVectorGetZ(this->GetBoundingSphereWorldSpacePosition());
+
+	float distance_squared = (powf((x1 - x2), 2.0f) + powf((y1 - y2), 2.0f) + powf((z1 - z2), 2.0f));
+	float radii_squared = powf((model->GetBoundingSphereRadius()) + (this->GetBoundingSphereRadius()), 2.0f);
+
+	if (distance_squared < radii_squared)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
