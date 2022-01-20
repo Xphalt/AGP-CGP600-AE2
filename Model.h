@@ -15,6 +15,8 @@ public:
 	void CalculateModelCentrePoint();
 	void CalculateBoundingSphereRadius();
 	bool CheckCollision(Model* _model);
+	void LookAtXZ(float _xPos, float _zPos);
+	void MoveForward(float _distance);
 
 	// Setters
 	void SetXPos(float _xPos);
@@ -59,7 +61,13 @@ private:
 	float m_xAngle, m_yAngle, m_zAngle;
 	float m_scale;
 
+	XMVECTOR m_forward;
+	XMVECTOR m_backward;
+	XMVECTOR m_left;
+	XMVECTOR m_right;
+
 	float m_boundingSphereCentreX, m_boundingSphereCentreY, m_boundingSphereCentreZ;
 	float m_boundingSphereRadius;
 	
+
 };

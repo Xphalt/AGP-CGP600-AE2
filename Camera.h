@@ -25,4 +25,8 @@ public:
 	void Up(float _distance);
 	XMMATRIX GetViewMatrix();
 	void Strafe(float _distance);
+
+	float GetXPos() const { return m_x; }
+	float GetYPos() const { return m_y; }
+	float GetZPos() const { return m_z; }
 };

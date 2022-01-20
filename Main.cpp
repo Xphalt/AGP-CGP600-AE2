@@ -224,6 +224,7 @@ HRESULT InitialiseGraphics(void);
 HRESULT Initialise();
 void ReadInputStates();
 bool IsKeyPressed(unsigned char _keycode) { return m_keyboardKeyStates[_keycode] & 0x80; }
+void Input();
 
 #pragma endregion
 
@@ -269,6 +270,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
         else
         {
+            Input();
             RenderFrame();
         }
     }
@@ -324,13 +326,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
-
-    //case WM_KEYDOWN:
-    //    if (wParam == VK_ESCAPE)
-    //    {
-    //        DestroyWindow(g_hWnd);
-    //        return 0;
-    //    }
 
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -516,7 +511,7 @@ HRESULT InitialiseGraphics()
     g_pFloor = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
     g_pFloor->InitObjModel();
     g_pFloor->SetScale(5);
-    g_pFloor->SetYPos(-5);
+    g_pFloor->SetYPos(-10);
 
     g_pPlayer = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
     g_pPlayer->AddTexture((char*)"assets/BoxTexture.bmp");
@@ -554,9 +549,6 @@ void ShutdownD3D()
 
 void RenderFrame(void)
 {
-    ReadInputStates();
-    if (IsKeyPressed(DIK_ESCAPE)) { DestroyWindow(g_hWnd); }
-
     g_pImmediateContext->OMSetDepthStencilState(g_pDepthStateTrue, 1);
     float rgba_clear_colour[4] = { 0.1f, 0.2f, 0.6f, 1.0f };
     g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, rgba_clear_colour);
@@ -576,6 +568,8 @@ void RenderFrame(void)
     g_pFloor->Draw(&view, &projection);
     g_pPlayer->Draw(&view, &projection);
     g_pEnemy->Draw(&view, &projection);
+
+    if (g_pPlayer->CheckCollision(g_pEnemy)) { g_pPlayer->IncXPos(0); }
 
     //world = XMMatrixIdentity();
     //g_pRootNode->Execute(&world, &view, &projection);
@@ -611,24 +605,25 @@ HRESULT Initialise()
     return S_OK;
 }
 
-//HRESULT InitialiseInput(void)
-//{
-//    hr = g_keyboard_device->SetDataFormat(&c_dfDIKeyboard);
-//    if (FAILED(hr)) return hr;
-//
-//    hr = g_keyboard_device->SetCooperativeLevel(g_hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
-//    if (FAILED(hr)) return hr;
-//
-//    hr = g_keyboard_device->Acquire();
-//    if (FAILED(hr)) return hr;
-//
-//    return S_OK;
-//}
-
 void ReadInputStates()
 {
     HRESULT hr;
     hr = m_pKeyboardDevice->GetDeviceState(sizeof(m_keyboardKeyStates), (LPVOID)&m_keyboardKeyStates);
 
     if (FAILED(hr)) { if ((hr == DIERR_INPUTLOST) || (hr == DIERR_NOTACQUIRED)) { m_pKeyboardDevice->Acquire(); } }
+}
+
+void Input()
+{
+    ReadInputStates();
+    if (IsKeyPressed(DIK_ESCAPE)) { DestroyWindow(g_hWnd); }
+    //if (IsKeyPressed(DIK_A)) { g_camera->Strafe(-0.001f); }
+    //if (IsKeyPressed(DIK_D)) { g_camera->Strafe(0.001f); }
+    //if (IsKeyPressed(DIK_W)) { g_camera->Forward(0.001f); }
+    //if (IsKeyPressed(DIK_S)) { g_camera->Forward(-0.001f); }
+
+    if (IsKeyPressed(DIK_A)) { g_pPlayer->IncXPos(-0.001f); }
+    if (IsKeyPressed(DIK_D)) { g_pPlayer->IncXPos(0.001f); }
+    if (IsKeyPressed(DIK_W)) { g_pPlayer->IncZPos(0.001f); }
+    if (IsKeyPressed(DIK_S)) { g_pPlayer->IncZPos(-0.001f); }
 }
