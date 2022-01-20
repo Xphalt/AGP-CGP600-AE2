@@ -8,15 +8,12 @@
 #define XM_NO_ALIGNMENT
 #include <DirectXMath.h>
 #include "Camera.h"
-#include "KeyboardInput.h"
+//#include "KeyboardInput.h"
 #include "Shaders.h"
-#include "Vertex.h"
-#include "VertexBuffer.h"
-#include "IndicesBuffer.h"
-#include "ConstantBuffer.h"
 
 using namespace DirectX;
 
+class Model;
 class Shaders;
 struct Vertex;
 
@@ -39,8 +36,9 @@ public:
 	ID3D11DepthStencilView*   GetDSV()				 { return m_pDSV; }
 	ID3D11Texture2D*		  GetDSB()				 { return m_pDSB; }
 	ID3D11DepthStencilState*  GetDSS()				 { return m_pDSS; }
-	ID3D11SamplerState*		  GetSamplerState()		 { return m_pSamplerState; }
+	ID3D11SamplerState* const* GetSamplerState()		 { return &m_pSamplerState; }
 	ID3D11ShaderResourceView* GetTexture()			 { return m_pTexture; }
+
 private:										    
 	static Renderer			 s_instance;		    
 	Renderer();								    
@@ -51,17 +49,14 @@ private:
 	IDXGISwapChain*			  m_pSwapChain				{ nullptr };
 	ID3D11RenderTargetView*   m_pRenderTargetView		{ nullptr };
 	Camera* m_pCamera{ nullptr };
-	KeyboardInput*			  m_pKeyboardInput			{ nullptr };
+	//KeyboardInput*			  m_pKeyboardInput			{ nullptr };
 	Shaders*				  m_pShaders			    { nullptr };
-	VertexBuffer<Vertex>	  m_pVertexBuffer;
-	ConstantBuffer<CB_VS_VertexShader> m_CB_VS_vertexShader;
-	ConstantBuffer<CB_PS_PixelShader> m_CB_PS_pixelShader;
-	IndicesBuffer			  m_pIndicesBuffer;
 	ID3D11RasterizerState*	  m_pRasterState			{ nullptr };
 	ID3D11DepthStencilView*   m_pDSV					{ nullptr };
 	ID3D11Texture2D*		  m_pDSB					{ nullptr };
 	ID3D11DepthStencilState*  m_pDSS					{ nullptr };
 	ID3D11SamplerState*		  m_pSamplerState			{ nullptr };
 	ID3D11ShaderResourceView* m_pTexture				{ nullptr };
+	Model* m_pModel{ nullptr };
 	float m_degrees{ NULL };
 };

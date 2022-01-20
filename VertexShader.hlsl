@@ -21,6 +21,5 @@ VS_OUTPUT main(VS_INPUT _input)
 
     output.outPosition = mul(WVPMatrix, _input.inPosition);
     output.outTexCoord = _input.inTexCoord;
-
     return output;
 }

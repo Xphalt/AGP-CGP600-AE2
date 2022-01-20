@@ -5,12 +5,11 @@ Model::~Model()
 	if (m_pObject != nullptr) { delete m_pObject; m_pObject = nullptr; }
 }
 
-HRESULT Model::LoadObjModel(char* _filename, ID3D11Device* _device, ID3D11DeviceContext* _deviceContext, ID3D11ShaderResourceView* _texture, ConstantBuffer<CB_VS_VertexShader>& _cb_vs_vertexShader)
+HRESULT Model::LoadObjModel(char* _filename, ID3D11Device* _device, ID3D11DeviceContext* _deviceContext, ID3D11ShaderResourceView* _texture)
 {
 	m_pDevice = _device;
 	m_pDeviceContext = _deviceContext;
 	m_pTexture = _texture;
-	m_CB_VS_vertexShader = _cb_vs_vertexShader;
 
 	m_pObject = new ObjFileModel(_filename, m_pDevice, m_pDeviceContext);
 
@@ -29,46 +28,35 @@ HRESULT Model::LoadObjModel(char* _filename, ID3D11Device* _device, ID3D11Device
 	};
 
 	HRESULT hr;
-	hr = m_vertexBuffer.Initialise(m_pDevice, vertex, ARRAYSIZE(vertex));
-	if (FAILED(hr)) { return hr; }
-
-	DWORD indices[] =
-	{
-		0, 1, 2,
-		0, 2, 3,
-		4, 7, 6,
-		4, 6, 5,
-		3, 2, 6,
-		3, 6, 7,
-		4, 5, 1,
-		4, 1, 0,
-		1, 5, 6,
-		1, 6, 2,
-		0, 3, 7,
-		0, 7, 4,
-	};
 	
-	hr = m_indicesBuffer.Initialise(m_pDevice, indices, ARRAYSIZE(indices));
+	hr = m_CB_VS_vertexShader.Initialize(m_pDevice, m_pDeviceContext);
 	if (FAILED(hr)) { return hr; }
-
-	
 
 	return S_OK;
 }
 
-void Model::Draw(const XMMATRIX& _viewProjectionMatrix)
+void Model::Draw(XMMATRIX* _view, XMMATRIX* _projection)
 {
-	m_CB_VS_vertexShader.data.WorldViewProjection = m_worldMatrix * _viewProjectionMatrix;
-	m_CB_VS_vertexShader.data.WorldViewProjection = XMMatrixTranspose(m_CB_VS_vertexShader.data.WorldViewProjection);
-	m_CB_VS_vertexShader.ApplyChanges();
+	XMMATRIX world;
+	world = XMMatrixIdentity();
+	world *= XMMatrixScaling(1, 1, 1);
+	world *= XMMatrixRotationX(XMConvertToRadians(m_xAngle));
+	world *= XMMatrixRotationY(XMConvertToRadians(m_yAngle));
+	world *= XMMatrixRotationZ(XMConvertToRadians(m_zAngle));
+	world *= XMMatrixTranslation(m_x, m_y, m_z);
 
-	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_CB_VS_vertexShader.GetBufferAddress());
+	m_pDeviceContext->VSSetShader(Renderer::GetInstance().GetShaders()->GetVertexShader(), NULL, 0);
+	m_pDeviceContext->PSSetShader(Renderer::GetInstance().GetShaders()->GetPixelShader(), NULL, 0);
+
+	m_CB_VS_vertexShader.data.WorldViewProjection = world * *(_view) * *(_projection);
+
+	m_pDeviceContext->PSSetSamplers(0, 1, Renderer::GetInstance().GetSamplerState());
+	m_pDeviceContext->IASetInputLayout(Renderer::GetInstance().GetShaders()->GetInputLayout());
+	Renderer::GetInstance().GetDeviceContext()->VSSetConstantBuffers(0, 1, m_CB_VS_vertexShader.GetBufferAddress());
+	m_pDeviceContext->UpdateSubresource(m_CB_VS_vertexShader.GetBuffer(), 0, 0, &m_CB_VS_vertexShader.data, 0, 0);
 	m_pDeviceContext->PSSetShaderResources(0, 1, &m_pTexture);
-	m_pDeviceContext->IASetIndexBuffer(m_indicesBuffer.GetBuffer(), DXGI_FORMAT::DXGI_FORMAT_R32_UINT, 0);
 
-	UINT offset = 0;
-	m_pDeviceContext->IASetVertexBuffers(0, 1, m_vertexBuffer.GetBufferAddress(), m_vertexBuffer.GetStrideAddress(), &offset);
-	m_pDeviceContext->DrawIndexed(m_indicesBuffer.BufferSize(), 0, 0);
+	m_pObject->Draw();
 }
 
 void Model::AddTexture(ID3D11ShaderResourceView* _texture)
@@ -76,81 +64,166 @@ void Model::AddTexture(ID3D11ShaderResourceView* _texture)
 	m_pTexture = _texture;
 }
 
-void Model::UpdateWorldMatrix()
-{
-	m_worldMatrix = XMMatrixIdentity();
-}
-
-#pragma region Setters
-void Model::SetXPos(float _xPos)
-{
-	m_x = _xPos;
-}
-
-void Model::SetYPos(float _yPos)
-{
-	m_y = _yPos;
-}
-
-void Model::SetZPos(float _zPos)
-{
-	m_z = _zPos;
-}
-
-void Model::SetXAngle(float _xAngle)
-{
-	m_xAngle = _xAngle;
-}
-
-void Model::SetYAngle(float _yAngle)
-{
-	m_yAngle = _yAngle;
-}
-
-void Model::SetZAngle(float _zAngle)
-{
-	m_zAngle = _zAngle;
-}
-
-void Model::SetScale(float _scale)
-{
-	m_scale = _scale;
-}
-#pragma endregion
-
-#pragma region Increments
-void Model::IncXPos(float _xPos)
-{
-	m_x += _xPos;
-}
-
-void Model::IncYPos(float _yPos)
-{
-	m_y += _yPos;
-}
-
-void Model::IncZPos(float _zPos)
-{
-	m_z += _zPos;
-}
-
-void Model::IncXAngle(float _xAngle)
-{
-	m_xAngle += _xAngle;
-}
-
-void Model::IncYAngle(float _yAngle)
-{
-	m_yAngle += _yAngle;
-}
-
-void Model::IncZAngle(float _zAngle)
-{
-	m_zAngle += _zAngle;
-}
-
-void Model::IncScale(float _scale)
-{
-	m_scale += _scale;
-}
-#pragma endregion
+//const XMVECTOR& Model::GetPositionVector() const
+//{
+//	return m_positionVector;
+//}
+//
+//const XMFLOAT3& Model::GetPositionFloat3() const
+//{
+//	return m_position;
+//}
+//
+//const XMVECTOR& Model::GetRotationVector() const
+//{
+//	return m_rotationVector;
+//}
+//
+//const XMFLOAT3& Model::GetRotationFloat3() const
+//{
+//	return m_rotation;
+//}
+//
+//void Model::SetPosition(const XMVECTOR& _pos)
+//{
+//	XMStoreFloat3(&m_position, _pos);
+//	m_positionVector = _pos;
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::SetPosition(const XMFLOAT3& _pos)
+//{
+//	m_position = _pos;
+//	m_positionVector = XMLoadFloat3(&m_position);
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::SetPosition(float _xPos, float _yPos, float _zPos)
+//{
+//	m_position = XMFLOAT3(_xPos, _yPos, _zPos);
+//	m_positionVector = XMLoadFloat3(&m_position);
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::AdjustPosition(const XMVECTOR& _position)
+//{
+//	m_positionVector += _position;
+//	XMStoreFloat3(&m_position, m_positionVector);
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::AdjustPosition(const XMFLOAT3& _position)
+//{
+//	m_position.x += _position.y;
+//	m_position.y += _position.y;
+//	m_position.z += _position.z;
+//	m_positionVector = XMLoadFloat3(&m_position);
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::AdjustPosition(float _xPos, float _yPos, float _zPos)
+//{
+//	m_position.x += _xPos;
+//	m_position.y += _yPos;
+//	m_position.z += _zPos;
+//	m_positionVector = XMLoadFloat3(&m_position);
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::SetRotation(const XMVECTOR& _rotation)
+//{
+//	m_rotationVector = _rotation;
+//	XMStoreFloat3(&m_rotation, _rotation);
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::SetRotation(const XMFLOAT3& _rotation)
+//{
+//	m_rotation = _rotation;
+//	m_rotationVector = XMLoadFloat3(&_rotation);
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::SetRotation(float x, float y, float z)
+//{
+//	m_rotation = XMFLOAT3(x, y, z);
+//	m_rotationVector = XMLoadFloat3(&m_rotation);
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::AdjustRotation(const XMVECTOR& _rotation)
+//{
+//	m_rotationVector += _rotation;
+//	XMStoreFloat3(&m_rotation, m_rotationVector);
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::AdjustRotation(const XMFLOAT3& _rotation)
+//{
+//	m_rotation.x += _rotation.x;
+//	m_rotation.y += _rotation.y;
+//	m_rotation.z += _rotation.z;
+//	m_rotation = XMLoadFloat3(&rot);
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::AdjustRotation(float x, float y, float z)
+//{
+//	m_rotation.x += x;
+//	m_rotation.y += y;
+//	m_rotation.z += z;
+//	m_rotation = XMLoadFloat3(&rot);
+//	UpdateWorldMatrix();
+//}
+//
+//void Model::SetLookAtPos(XMFLOAT3 lookAtPos)
+//{
+//	//Verify that look at m_posis not the same as cam pos. They cannot be the same as that wouldn't make sense and would result in undefined behavior.
+//	if (lookAtPos.x == pos.x && lookAtPos.y == pos.y && lookAtPos.z == pos.z)
+//		return;
+//
+//	lookAtPos.x = pos.x - lookAtPos.x;
+//	lookAtPos.y = pos.y - lookAtPos.y;
+//	lookAtPos.z = pos.z - lookAtPos.z;
+//
+//	float pitch = 0.0f;
+//	if (lookAtPos.y != 0.0f)
+//	{
+//		const float distance = sqrt(lookAtPos.x * lookAtPos.x + lookAtPos.z * lookAtPos.z);
+//		pitch = atan(lookAtPos.y / distance);
+//	}
+//
+//	float yaw = 0.0f;
+//	if (lookAtPos.x != 0.0f)
+//	{
+//		yaw = atan(lookAtPos.x / lookAtPos.z);
+//	}
+//	if (lookAtPos.z > 0)
+//		yaw += XM_PI;
+//
+//	SetRotation(pitch, yaw, 0.0f);
+//}
+//
+//const XMVECTOR& Model::GetForwardVector()
+//{
+//	return vec_forward;
+//}
+//
+//const XMVECTOR& Model::GetRightVector()
+//{
+//	return vec_right;
+//}
+//
+//const XMVECTOR& Model::GetBackwardVector()
+//{
+//	return vec_backward;
+//}
+//
+//const XMVECTOR& Model::GetLeftVector()
+//{
+//	return vec_left;
+//}
+//
+//void Model::UpdateWorldMatrix()
+//{
+//}

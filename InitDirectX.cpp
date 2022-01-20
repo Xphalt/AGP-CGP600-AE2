@@ -1,5 +1,7 @@
 #pragma once
 #include "InitDirectX.h"
+#include "Vertex.h"
+#include "Model.h"
 
 InitDirectX InitDirectX::s_instance;
 
@@ -261,8 +263,8 @@ HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
     {
         Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left  - [0]
         Vertex(-0.5f,   0.5f, 1.0f, 0.0f, 0.0f), //Top Left     - [1]
-        Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f),  //Top Right    - [2]
-        Vertex(0.5f, -0.5f, 1.0f, 1.0f, 1.0f),  //Bottom Left  - [3]
+        Vertex(0.5f,    0.5f, 1.0f, 1.0f,  0.0f), //Top Right    - [2]
+        Vertex(0.5f,   -0.5f, 1.0f, 1.0f,   1.0f), //Bottom Left  - [3]
     };
 
     DWORD indices[] =
@@ -271,23 +273,10 @@ HRESULT InitDirectX::InitialiseScene(HRESULT& hr)
         0, 2, 3
     };
 
-    hr = Renderer::GetInstance().m_pVertexBuffer.Initialise(Renderer::GetInstance().m_pDevice, vertex, ARRAYSIZE(vertex));
-    if (FAILED(hr)) { return hr; }
-
-    hr = Renderer::GetInstance().m_pVertexBuffer.Initialise(Renderer::GetInstance().m_pDevice, vertex, ARRAYSIZE(vertex));
-    if (FAILED(hr)) { return hr; }
-
-    hr = Renderer::GetInstance().m_pIndicesBuffer.Initialise(Renderer::GetInstance().m_pDevice, indices, ARRAYSIZE(indices));
-    if (FAILED(hr)) { return hr; }
-
     hr = D3DX11CreateShaderResourceViewFromFile(Renderer::GetInstance().m_pDevice, "assets/textures/BoxTexture.bmp", NULL, NULL, &Renderer::GetInstance().m_pTexture, NULL);
     if (FAILED(hr)) { return hr; }
 
-    hr = Renderer::GetInstance().m_CB_VS_vertexShader.Initialize(Renderer::GetInstance().m_pDevice, Renderer::GetInstance().m_pDeviceContext);
-    if (FAILED(hr)) { return hr; }
-    
-    hr = Renderer::GetInstance().m_CB_PS_pixelShader.Initialize(Renderer::GetInstance().m_pDevice, Renderer::GetInstance().m_pDeviceContext);
-    if (FAILED(hr)) { return hr; }
+    Renderer::GetInstance().m_pModel->LoadObjModel((char*)"assets/cube.obj", Renderer::GetInstance().GetDevice(), Renderer::GetInstance().GetDeviceContext(), Renderer::GetInstance().m_pTexture);
 
     return S_OK;
 }
