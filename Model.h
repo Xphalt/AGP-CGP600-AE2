@@ -1,8 +1,6 @@
 #pragma once
 #include "objfilemodel.h"
 
-class SceneNode;
-
 class Model
 {
 public:

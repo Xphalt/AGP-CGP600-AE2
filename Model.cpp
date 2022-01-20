@@ -1,5 +1,4 @@
 #include "Model.h"
-#include "SceneNode.h"
 
 struct CONSTANT_BUFFER0
 {

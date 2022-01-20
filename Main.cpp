@@ -10,7 +10,6 @@
 #include "Camera.h"
 #include "text2D.h"
 #include "Model.h"
-//#include "SceneNode.h"
 
 using namespace DirectX;
 
@@ -24,27 +23,15 @@ ID3D11Device* g_pD3DDevice = NULL;
 ID3D11DeviceContext* g_pImmediateContext = NULL;
 IDXGISwapChain* g_pSwapChain = NULL;
 ID3D11RenderTargetView* g_pBackBufferRTView = NULL;
-ID3D11Buffer* g_pVertexBuffer;
-ID3D11VertexShader* g_pVertexShader;
-ID3D11PixelShader* g_pPixelShader;
-ID3D11InputLayout* g_pInputLayout;
 ID3D11DepthStencilView* g_pZBuffer;
 ID3D11DepthStencilState* g_pDepthStateTrue;
 ID3D11DepthStencilState* g_pDepthStateFalse;
 Camera* g_camera;
-ID3D11ShaderResourceView* g_pTexture0;
-ID3D11SamplerState* g_pSampler0;
 Text2D* g_2DText;
 ID3D11BlendState* g_pAlphaBlendEnable;
 ID3D11BlendState* g_pAlphaBlendDisable;
 ID3D11RasterizerState* rastStateCullNone;
 ID3D11RasterizerState* rastStateCullBack;
-XMVECTOR g_directional_light_shines_from;
-XMVECTOR g_directional_light_colour;
-XMVECTOR g_ambient_light_colour;
-SceneNode* g_pRootNode;
-SceneNode* g_pNode1;
-SceneNode* g_pNode2;
 
 IDirectInput8* m_pDirectInput;
 IDirectInputDevice8* m_pKeyboardDevice;
@@ -349,20 +336,13 @@ HRESULT InitialiseGraphics()
 
     g_camera = new Camera(0.0f, 0.0f, -5.0f, 0.0f);
 
-    //g_pRootNode = new SceneNode();
-    //g_pNode1 = new SceneNode();
-    //g_pNode2 = new SceneNode();
-
     g_pPlayer = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
     g_pPlayer->AddTexture((char*)"assets/BoxTexture.bmp");
-    //g_pNode1->SetModel(g_pPlayer);
-    //g_pRootNode->AddChildNode(g_pNode1);
+
 
     g_pEnemy = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
     g_pEnemy->AddTexture((char*)"assets/BoxTexture.bmp");
-    //g_pNode2->SetModel(g_pEnemy);
-    //g_pNode1->AddChildNode(g_pNode2);
-    
+
     g_pPlayer->InitObjModel();
     g_pPlayer->SetXPos(-2);
     g_pEnemy-> InitObjModel();
@@ -374,15 +354,20 @@ HRESULT InitialiseGraphics()
 
 void ShutdownD3D()
 {
-    if (g_2DText) { delete g_2DText; };
-    if (g_pTexture0) { g_pTexture0->Release(); }
-    if (g_pSampler0) { g_pSampler0->Release(); }
+    if (g_pEnemy) { delete g_pEnemy; }
+    if (g_pPlayer) { delete g_pPlayer; }
     if (g_camera) { delete g_camera; }
+    if (g_2DText) { delete g_2DText; };
+    if (rastStateCullBack) { rastStateCullBack->Release(); }
+    if (rastStateCullNone) { rastStateCullNone->Release(); }
+    if (g_pAlphaBlendDisable) { g_pAlphaBlendDisable->Release(); }
+    if (g_pAlphaBlendEnable) { g_pAlphaBlendEnable->Release(); }
+    if (g_pDepthStateFalse) { g_pDepthStateFalse->Release(); }
+    if (g_pDepthStateTrue) { g_pDepthStateTrue->Release(); }
     if (g_pZBuffer) { g_pZBuffer->Release(); }
     if (g_pBackBufferRTView) { g_pBackBufferRTView->Release(); }
     if (g_pSwapChain) { g_pSwapChain->Release(); }
     if (g_pImmediateContext) { g_pImmediateContext->Release(); }
-    if (g_pPlayer) { delete g_pPlayer; }
     if (g_pD3DDevice) { g_pD3DDevice->Release(); }
 }
 
