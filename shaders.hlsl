@@ -33,5 +33,5 @@ VOut VShader(float4 position : POSITION, float4 color : COLOR, float2 texcoord :
 
 float4 PShader(float4 position : SV_POSITION, float4 color : COLOR, float2 texcoord : TEXCOORD) : SV_TARGET
 {
-	return color * texture0.Sample(sampler0, texcoord);
+	return (1, 1, 1, 1);
 }

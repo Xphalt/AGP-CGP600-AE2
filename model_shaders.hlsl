@@ -14,19 +14,21 @@ struct VOut
 	float3 normal : NORMAL;
 };
 
-VOut ModelVS(float4 position : POSITION, float2 texcoord : TEXCOORD, float3 normal : NORMAL)
+VOut ModelVS(float4 position : POSITION, float4 colour : COLOR, float2 texcoord : TEXCOORD, float3 normal : NORMAL)
 {
 	VOut output;
 
 	float4 default_colour = { 1.0f, 1.0f, 1.0f, 1.0f };
 	output.position = mul(WVPMatrix, position);
+	output.color = colour;
 	output.texcoord = texcoord;
-	output.color = default_colour;
+	output.normal = normal;
 
 	return output;
 }
 
-float4 ModelPS(float4 position : SV_POSITION, float4 color : COLOR, float2 texcoord : TEXCOORD) : SV_TARGET
+float4 ModelPS(float4 position : SV_POSITION, float4 colour : COLOR, float2 texcoord : TEXCOORD) : SV_TARGET
 {
-	return texture0.Sample(sampler0, texcoord) * color;
+	//return (1.0f, 1.0f, 1.0f, 1.0f);
+	return texture0.Sample(sampler0, texcoord) * colour;
 }
