@@ -66,8 +66,10 @@ ID3D11RasterizerState* rastStateCullBack;
 XMVECTOR g_directional_light_shines_from;
 XMVECTOR g_directional_light_colour;
 XMVECTOR g_ambient_light_colour;
+KeyboardInput* g_pInput;
 
-Model* g_model;
+Model* g_pPlayer;
+Model* g_pEnemy;
 #pragma endregion
 
 #pragma region ForwardDeclarations
@@ -91,6 +93,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         DXTRACE_MSG("Failed to create window");
         return 0;
     }
+
+    //if (FAILED(g_pInput->Initialise(g_hInst, g_hWnd)))
+    //{
+    //    DXTRACE_MSG("Failed to create input device");
+    //    return 0;
+    //}
 
     if (FAILED(InitialiseD3D()))
     {
@@ -383,10 +391,15 @@ HRESULT InitialiseGraphics()
     HRESULT hr = S_OK;
 
     g_camera = new Camera(0.0f, 0.0f, -5.0f, 0.0f);
-    g_model = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
-    g_model->InitObjModel();
-    g_model->AddTexture((char*)"assets/BoxTexture.bmp");
-
+    g_pPlayer = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
+    g_pEnemy = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
+    g_pPlayer->InitObjModel();
+    g_pPlayer->SetXPos(-2);
+    g_pEnemy-> InitObjModel();
+    g_pEnemy->SetXPos(2);
+    g_pEnemy->SetScale(0.5);
+    g_pPlayer->AddTexture((char*)"assets/BoxTexture.bmp");
+    g_pEnemy->AddTexture((char*)"assets/BoxTexture.bmp");
 
     return hr;
 }
@@ -402,7 +415,7 @@ void ShutdownD3D()
     if (g_pBackBufferRTView) { g_pBackBufferRTView->Release(); }
     if (g_pSwapChain) { g_pSwapChain->Release(); }
     if (g_pImmediateContext) { g_pImmediateContext->Release(); }
-    if (g_model) { delete g_model; }
+    if (g_pPlayer) { delete g_pPlayer; }
     if (g_pD3DDevice) { g_pD3DDevice->Release(); }
 }
 #pragma endregion
@@ -417,14 +430,15 @@ void RenderFrame(void)
 
     XMMATRIX view, projection;
     view = g_camera->GetViewMatrix();
-    projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(60), 640.0 / 480.0, 1.0, 100.0);
+    projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(90), 640.0 / 480.0, 1.0, 100.0);
 
     g_2DText->AddText("Some Text", -1.0, +1.0, .2);
     g_pImmediateContext->OMSetBlendState(g_pAlphaBlendEnable, 0, 0xffffffff);
     g_pImmediateContext->OMSetBlendState(g_pAlphaBlendDisable, 0, 0xffffffff);
 
     //g_pImmediateContext->RSSetState(rastStateCullBack);
-    g_model->Draw(&view, &projection);
+    g_pPlayer->Draw(&view, &projection);
+    g_pEnemy->Draw(&view, &projection);
     //g_pImmediateContext->RSSetState(rastStateCullNone);
     g_2DText->RenderText();
     g_pSwapChain->Present(0, 0);

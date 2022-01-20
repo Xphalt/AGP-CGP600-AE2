@@ -6,6 +6,7 @@ class KeyboardInput
 public:
 	~KeyboardInput();
 
+
 	HRESULT Initialise(HINSTANCE _hInstance, HWND _hwnd);
 	void ReadInputStates();
 	bool IsKeyPressed(unsigned char _keycode) { return m_keyboardKeyStates[_keycode] & 0x80; }
