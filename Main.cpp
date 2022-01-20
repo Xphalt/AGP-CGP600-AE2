@@ -10,10 +10,11 @@
 #define _XM_NO_INTRINSICS_
 #define XM_NO_ALIGNMENT
 #include <DirectXMath.h>
+#include "KeyboardInput.h"
 #include "Camera.h"
 #include "text2D.h"
 #include "Model.h"
-//
+
 using namespace DirectX;
 #pragma endregion
 
