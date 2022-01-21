@@ -48,6 +48,8 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT InitialiseD3D();
 void ShutdownD3D();
 void RenderFrame(void);
+void DirectXUpdates(float  rgba_clear_colour[4]);
+void DrawObjects(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection);
 HRESULT InitialiseGraphics(void);
 HRESULT Initialise();
 void ReadInputStates();
@@ -377,33 +379,36 @@ void ShutdownD3D()
 
 void RenderFrame(void)
 {
-    g_pImmediateContext->OMSetDepthStencilState(g_pDepthStateTrue, 1);
     float rgba_clear_colour[4] = { 0.1f, 0.2f, 0.6f, 1.0f };
-    g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, rgba_clear_colour);
-    g_pImmediateContext->ClearDepthStencilView(g_pZBuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
     XMMATRIX world, view, projection;
     view = g_camera->GetViewMatrix();
     projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(90), 640.0 / 480.0, 1.0, 100.0);
 
-    g_2DText->AddText("Some Text", -1.0, +1.0, .2);
-    g_pImmediateContext->OMSetBlendState(g_pAlphaBlendEnable, 0, 0xffffffff);
-    g_pImmediateContext->OMSetBlendState(g_pAlphaBlendDisable, 0, 0xffffffff);
-
-    g_pImmediateContext->RSSetState(rastStateCullBack);
+    DirectXUpdates(rgba_clear_colour);
 
     g_pPlayer->LookAtXZ(g_camera->GetXPos(), g_camera->GetZPos());
     g_pPlayer->MoveForward(0.001f);
 
+    DrawObjects(view, projection);
+}
+
+void DirectXUpdates(float  rgba_clear_colour[4])
+{
+    g_pImmediateContext->OMSetDepthStencilState(g_pDepthStateTrue, 1);
+    g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, rgba_clear_colour);
+    g_pImmediateContext->ClearDepthStencilView(g_pZBuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    g_pImmediateContext->OMSetBlendState(g_pAlphaBlendEnable, 0, 0xffffffff);
+    g_2DText->AddText("Some Text", -1.0, +1.0, .2);
+    g_pImmediateContext->OMSetBlendState(g_pAlphaBlendDisable, 0, 0xffffffff);
+    g_pImmediateContext->RSSetState(rastStateCullBack);
+}
+
+void DrawObjects(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection)
+{
+
     g_pFloor->Draw(&view, &projection);
     g_pPlayer->Draw(&view, &projection);
     g_pEnemy->Draw(&view, &projection);
-
-    if (g_pPlayer->CheckCollision(g_pEnemy)) { g_pPlayer->IncXPos(0); }
-
-    //world = XMMatrixIdentity();
-    //g_pRootNode->Execute(&world, &view, &projection);
-
     g_pImmediateContext->RSSetState(rastStateCullNone);
     g_2DText->RenderText();
     g_pSwapChain->Present(0, 0);
