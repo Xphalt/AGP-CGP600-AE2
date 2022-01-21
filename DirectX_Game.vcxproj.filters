@@ -25,6 +25,30 @@
     <Filter Include="Input\Components">
       <UniqueIdentifier>{ba5e3bd2-691a-4bd7-bf85-b734759f6b23}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{c269adf7-6392-4162-a5ac-06043c165dbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core">
+      <UniqueIdentifier>{3ab33854-9606-431e-b868-eb36b728a7ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Modules">
+      <UniqueIdentifier>{9df72c5d-2355-436d-8f84-18f4d1e583af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Components">
+      <UniqueIdentifier>{f858bbde-8c02-4cc5-b9f0-9e45b97ac742}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Components\InputComponent">
+      <UniqueIdentifier>{9730f55d-832f-471a-a296-3f340e3b6a45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Components\GraphicsComponent">
+      <UniqueIdentifier>{8162a3f1-2b87-48a3-8305-ae8e81559510}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Components\PhysicsComponent">
+      <UniqueIdentifier>{d6f16a95-c693-40d4-91af-7131ff047035}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\GameObject">
+      <UniqueIdentifier>{89ffe1a2-607f-4584-8f24-8f44d5632c50}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders.hlsl">
@@ -50,17 +74,23 @@
     <ClInclude Include="Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="InputKeyboard.h">
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="InputComponent.h">
-      <Filter>Input\Components</Filter>
+      <Filter>Core\Components\InputComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsComponent.h">
+      <Filter>Core\Components\GraphicsComponent</Filter>
     </ClInclude>
     <ClInclude Include="ModuleKeyboard.h">
-      <Filter>Input\Modules</Filter>
+      <Filter>Core\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Core\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsComponent.h">
+      <Filter>Core\Components\PhysicsComponent</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -79,17 +109,23 @@
     <ClCompile Include="Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="InputKeyboard.cpp">
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="InputComponent.cpp">
-      <Filter>Input\Components</Filter>
+      <Filter>Core\Components\InputComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsComponent.cpp">
+      <Filter>Core\Components\GraphicsComponent</Filter>
     </ClCompile>
     <ClCompile Include="ModuleKeyboard.cpp">
-      <Filter>Input\Modules</Filter>
+      <Filter>Core\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Core\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsComponent.cpp">
+      <Filter>Core\Components\PhysicsComponent</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

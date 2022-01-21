@@ -190,16 +190,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="GraphicsComponent.h" />
     <ClInclude Include="InputComponent.h" />
     <ClInclude Include="InputKeyboard.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModuleKeyboard.h" />
     <ClInclude Include="objfilemodel.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="PhysicsComponent.h" />
     <ClInclude Include="text2D.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="GraphicsComponent.cpp" />
     <ClCompile Include="InputComponent.cpp" />
     <ClCompile Include="InputKeyboard.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -207,6 +210,7 @@
     <ClCompile Include="ModuleKeyboard.cpp" />
     <ClCompile Include="objfilemodel.cpp" />
     <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="PhysicsComponent.cpp" />
     <ClCompile Include="text2D.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
