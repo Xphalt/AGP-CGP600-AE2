@@ -19,6 +19,12 @@
     <Filter Include="Input">
       <UniqueIdentifier>{668bcca9-d129-40c2-8ad1-8164b511548a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Input\Modules">
+      <UniqueIdentifier>{8e8dc3d3-f203-4475-8e89-79a96dc961a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Input\Components">
+      <UniqueIdentifier>{ba5e3bd2-691a-4bd7-bf85-b734759f6b23}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders.hlsl">
@@ -51,7 +57,10 @@
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="InputComponent.h">
-      <Filter>Input</Filter>
+      <Filter>Input\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ModuleKeyboard.h">
+      <Filter>Input\Modules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -73,11 +82,14 @@
     <ClCompile Include="GameObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="InputComponent.cpp">
-      <Filter>Input</Filter>
-    </ClCompile>
     <ClCompile Include="InputKeyboard.cpp">
       <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="InputComponent.cpp">
+      <Filter>Input\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ModuleKeyboard.cpp">
+      <Filter>Input\Modules</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

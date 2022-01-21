@@ -193,6 +193,7 @@
     <ClInclude Include="InputComponent.h" />
     <ClInclude Include="InputKeyboard.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="ModuleKeyboard.h" />
     <ClInclude Include="objfilemodel.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="text2D.h" />
@@ -203,6 +204,7 @@
     <ClCompile Include="InputKeyboard.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="ModuleKeyboard.cpp" />
     <ClCompile Include="objfilemodel.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="text2D.cpp" />

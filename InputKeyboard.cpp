@@ -37,3 +37,12 @@ void InputKeyboard::ReadInputStates()
 
     if (FAILED(hr)) { if ((hr == DIERR_INPUTLOST) || (hr == DIERR_NOTACQUIRED)) { m_pKeyboardDevice->Acquire(); } }
 }
+
+void InputKeyboard::Update(GameObject& _gameObject)
+{
+    ReadInputStates();
+    if (IsKeyPressed(DIK_W)) { _gameObject; }
+    if (IsKeyPressed(DIK_S)) { _gameObject; }
+    if (IsKeyPressed(DIK_A)) { _gameObject; }
+    if (IsKeyPressed(DIK_D)) { _gameObject; }
+}
