@@ -22,9 +22,6 @@
     <Filter Include="Core">
       <UniqueIdentifier>{3ab33854-9606-431e-b868-eb36b728a7ba}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Modules">
-      <UniqueIdentifier>{9df72c5d-2355-436d-8f84-18f4d1e583af}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Components">
       <UniqueIdentifier>{f858bbde-8c02-4cc5-b9f0-9e45b97ac742}</UniqueIdentifier>
     </Filter>
@@ -39,6 +36,9 @@
     </Filter>
     <Filter Include="Core\GameObject">
       <UniqueIdentifier>{89ffe1a2-607f-4584-8f24-8f44d5632c50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Components\InputComponent\Modules">
+      <UniqueIdentifier>{9df72c5d-2355-436d-8f84-18f4d1e583af}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -72,7 +72,7 @@
       <Filter>Core\Components\GraphicsComponent</Filter>
     </ClInclude>
     <ClInclude Include="ModuleKeyboard.h">
-      <Filter>Core\Modules</Filter>
+      <Filter>Core\Components\InputComponent\Modules</Filter>
     </ClInclude>
     <ClInclude Include="GameObject.h">
       <Filter>Core\GameObject</Filter>
@@ -104,7 +104,7 @@
       <Filter>Core\Components\GraphicsComponent</Filter>
     </ClCompile>
     <ClCompile Include="ModuleKeyboard.cpp">
-      <Filter>Core\Modules</Filter>
+      <Filter>Core\Components\InputComponent\Modules</Filter>
     </ClCompile>
     <ClCompile Include="GameObject.cpp">
       <Filter>Core\GameObject</Filter>
