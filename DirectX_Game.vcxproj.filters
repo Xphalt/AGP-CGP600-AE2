@@ -16,15 +16,6 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{62978e7b-eb66-4a49-8dda-93892773d256}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Input">
-      <UniqueIdentifier>{668bcca9-d129-40c2-8ad1-8164b511548a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Input\Modules">
-      <UniqueIdentifier>{8e8dc3d3-f203-4475-8e89-79a96dc961a5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Input\Components">
-      <UniqueIdentifier>{ba5e3bd2-691a-4bd7-bf85-b734759f6b23}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Graphics">
       <UniqueIdentifier>{c269adf7-6392-4162-a5ac-06043c165dbe}</UniqueIdentifier>
     </Filter>
@@ -74,9 +65,6 @@
     <ClInclude Include="Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="InputKeyboard.h">
-      <Filter>Input</Filter>
-    </ClInclude>
     <ClInclude Include="InputComponent.h">
       <Filter>Core\Components\InputComponent</Filter>
     </ClInclude>
@@ -108,9 +96,6 @@
     </ClCompile>
     <ClCompile Include="Model.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="InputKeyboard.cpp">
-      <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="InputComponent.cpp">
       <Filter>Core\Components\InputComponent</Filter>

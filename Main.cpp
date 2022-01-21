@@ -11,6 +11,9 @@
 #include "Model.h"
 #include <dinput.h>
 
+#include "GameObject.h"
+#include "GraphicsComponent.h"
+
 #pragma region MyRegion
 /****************************************************************************
  *
@@ -505,6 +508,11 @@ HRESULT InitialiseD3D()
 HRESULT InitialiseGraphics()
 {
     HRESULT hr = S_OK;
+
+    GameObject* m_pGameObject = new GameObject();
+
+    m_pGameObject->GetGraphicsComponent()->SetModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
+    m_pGameObject->GetGraphicsComponent()->SetTexture(g_pD3DDevice, (char*)"assets/BoxTexture.bmp");
 
     g_camera = new Camera(0.0f, 0.0f, -5.0f, 0.0f);
 

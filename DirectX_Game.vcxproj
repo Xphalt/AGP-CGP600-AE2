@@ -192,7 +192,6 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="GraphicsComponent.h" />
     <ClInclude Include="InputComponent.h" />
-    <ClInclude Include="InputKeyboard.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModuleKeyboard.h" />
     <ClInclude Include="objfilemodel.h" />
@@ -204,7 +203,6 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="GraphicsComponent.cpp" />
     <ClCompile Include="InputComponent.cpp" />
-    <ClCompile Include="InputKeyboard.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModuleKeyboard.cpp" />
