@@ -38,8 +38,8 @@ IDirectInputDevice8* m_pKeyboardDevice;
 unsigned char m_keyboardKeyStates[256];
 
 Model* g_pFloor;
-Model* g_pPlayer;
-Model* g_pEnemy;
+Model* g_pEnemy1;
+Model* g_pEnemy2;
 #pragma endregion
 
 #pragma region ForwardDeclarations
@@ -343,24 +343,24 @@ HRESULT InitialiseGraphics()
     g_pFloor->SetScale(5);
     g_pFloor->SetYPos(-10);
 
-    g_pPlayer = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
-    g_pPlayer->AddTexture((char*)"assets/BoxTexture.bmp");
-    g_pPlayer->InitObjModel();
-    g_pPlayer->SetXPos(-2);
+    g_pEnemy1 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
+    g_pEnemy1->AddTexture((char*)"assets/BoxTexture.bmp");
+    g_pEnemy1->InitObjModel();
+    g_pEnemy1->SetXPos(-2);
 
-    g_pEnemy = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
-    g_pEnemy->AddTexture((char*)"assets/BoxTexture.bmp");
-    g_pEnemy->InitObjModel();
-    g_pEnemy->SetScale(0.5);
-    g_pEnemy->SetXPos(2);
+    g_pEnemy2 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
+    g_pEnemy2->AddTexture((char*)"assets/BoxTexture.bmp");
+    g_pEnemy2->InitObjModel();
+    g_pEnemy2->SetScale(0.5);
+    g_pEnemy2->SetXPos(2);
 
     return hr;
 }
 
 void ShutdownD3D()
 {
-    if (g_pEnemy) { delete g_pEnemy; }
-    if (g_pPlayer) { delete g_pPlayer; }
+    if (g_pEnemy2) { delete g_pEnemy2; }
+    if (g_pEnemy1) { delete g_pEnemy1; }
     if (g_pFloor) { delete g_pFloor; }
     if (g_camera) { delete g_camera; }
     if (g_2DText) { delete g_2DText; };
@@ -386,8 +386,8 @@ void RenderFrame(void)
 
     DirectXUpdates(rgba_clear_colour);
 
-    g_pPlayer->LookAtXZ(g_camera->GetXPos(), g_camera->GetZPos());
-    g_pPlayer->MoveForward(0.001f);
+    g_pEnemy1->LookAtXZ(g_camera->GetXPos(), g_camera->GetZPos());
+    g_pEnemy1->MoveForward(0.001f);
 
     DrawObjects(view, projection);
 }
@@ -407,8 +407,8 @@ void DrawObjects(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection)
 {
 
     g_pFloor->Draw(&view, &projection);
-    g_pPlayer->Draw(&view, &projection);
-    g_pEnemy->Draw(&view, &projection);
+    g_pEnemy1->Draw(&view, &projection);
+    g_pEnemy2->Draw(&view, &projection);
     g_pImmediateContext->RSSetState(rastStateCullNone);
     g_2DText->RenderText();
     g_pSwapChain->Present(0, 0);
