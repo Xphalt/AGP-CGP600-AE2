@@ -13,7 +13,7 @@ class Camera
 private:
 	float m_x, m_y, m_z;
 	float m_dx, m_dy, m_dz;
-	float m_camera_rotation;
+	float m_cameraRotation;
 	XMVECTOR m_position, m_lookat, m_up;
 	float m_stepAmount;
 

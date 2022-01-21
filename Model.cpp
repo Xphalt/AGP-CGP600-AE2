@@ -323,3 +323,18 @@ bool Model::CheckCollision(Model* model)
 		return false;
 	}
 }
+
+void Model::LookAtXZ(float x, float z)
+{
+	float dx = x - m_x;
+	float dz = z - m_z;
+
+	m_yAngle = atan2(dx, dz) * (180.0 / XM_PI);
+}
+
+void Model::MoveForward(float distance)
+{
+	m_x += sin(m_yAngle * (XM_PI / 180.0)) * distance;
+	m_z += cos(m_yAngle * (XM_PI / 180.0)) * distance;
+
+}

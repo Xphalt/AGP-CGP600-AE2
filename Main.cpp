@@ -564,6 +564,8 @@ void RenderFrame(void)
 
     g_pImmediateContext->RSSetState(rastStateCullBack);
 
+    g_pPlayer->LookAtXZ(g_camera->GetXPos(), g_camera->GetZPos());
+    g_pPlayer->MoveForward(0.001f);
 
     g_pFloor->Draw(&view, &projection);
     g_pPlayer->Draw(&view, &projection);
@@ -622,8 +624,8 @@ void Input()
     //if (IsKeyPressed(DIK_W)) { g_camera->Forward(0.001f); }
     //if (IsKeyPressed(DIK_S)) { g_camera->Forward(-0.001f); }
 
-    if (IsKeyPressed(DIK_A)) { g_pPlayer->IncXPos(-0.001f); }
-    if (IsKeyPressed(DIK_D)) { g_pPlayer->IncXPos(0.001f); }
-    if (IsKeyPressed(DIK_W)) { g_pPlayer->IncZPos(0.001f); }
-    if (IsKeyPressed(DIK_S)) { g_pPlayer->IncZPos(-0.001f); }
+    if (IsKeyPressed(DIK_A)) { g_camera->Strafe(0.0025f); }
+    if (IsKeyPressed(DIK_D)) { g_camera->Strafe(-0.0025f); }
+    if (IsKeyPressed(DIK_W)) { g_camera->Forward(0.05f); }
+    if (IsKeyPressed(DIK_S)) { g_camera->Forward(-0.05f); }
 }
