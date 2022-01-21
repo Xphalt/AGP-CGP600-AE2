@@ -49,3 +49,18 @@ void Camera::Strafe(float _distance)
 	m_x += XMVectorGetX(right) * _distance;
 	m_z += XMVectorGetZ(right) * _distance;
 }
+
+void Camera::SetXPos(float _xPos)
+{
+	m_x = _xPos;
+}
+
+void Camera::SetYPos(float _yPos)
+{
+	m_y = _yPos;
+}
+
+void Camera::SetZPos(float _zPos)
+{
+	m_z = _zPos;
+}

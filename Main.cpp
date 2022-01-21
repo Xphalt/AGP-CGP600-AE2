@@ -37,6 +37,7 @@ IDirectInput8* m_pDirectInput;
 IDirectInputDevice8* m_pKeyboardDevice;
 unsigned char m_keyboardKeyStates[256];
 
+Model* g_pPlayer;
 Model* g_pFloor;
 Model* g_pEnemy1;
 Model* g_pEnemy2;
@@ -48,6 +49,8 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT InitialiseD3D();
 void ShutdownD3D();
 void RenderFrame(void);
+void Collision();
+void LastSafePosition(float previousXPos, float previousYPos, float previousZPos);
 void DirectXUpdates(float  rgba_clear_colour[4]);
 void DrawObjects(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection);
 HRESULT InitialiseGraphics(void);
@@ -336,23 +339,28 @@ HRESULT InitialiseGraphics()
 {
     HRESULT hr = S_OK;
 
-    g_camera = new Camera(0.0f, 0.0f, -5.0f, 0.0f);
+    g_camera = new Camera(0.0f, 0.0f, 0.0f, 0.0f);
+
+    g_pPlayer = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
+    g_pPlayer->InitObjModel();
+    g_pPlayer->SetScale(1);
 
     g_pFloor = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
     g_pFloor->InitObjModel();
     g_pFloor->SetScale(5);
     g_pFloor->SetYPos(-10);
 
-    g_pEnemy1 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
+    g_pEnemy1 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
     g_pEnemy1->AddTexture((char*)"assets/BoxTexture.bmp");
     g_pEnemy1->InitObjModel();
-    g_pEnemy1->SetXPos(-2);
+    g_pPlayer->SetScale(0.5);
+    g_pEnemy1->SetXPos(-5);
 
     g_pEnemy2 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
     g_pEnemy2->AddTexture((char*)"assets/BoxTexture.bmp");
     g_pEnemy2->InitObjModel();
     g_pEnemy2->SetScale(0.5);
-    g_pEnemy2->SetXPos(2);
+    g_pEnemy2->SetXPos(5);
 
     return hr;
 }
@@ -362,6 +370,7 @@ void ShutdownD3D()
     if (g_pEnemy2) { delete g_pEnemy2; }
     if (g_pEnemy1) { delete g_pEnemy1; }
     if (g_pFloor) { delete g_pFloor; }
+    if (g_pPlayer) { delete g_pPlayer; }
     if (g_camera) { delete g_camera; }
     if (g_2DText) { delete g_2DText; };
     if (rastStateCullBack) { rastStateCullBack->Release(); }
@@ -383,13 +392,49 @@ void RenderFrame(void)
     XMMATRIX world, view, projection;
     view = g_camera->GetViewMatrix();
     projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(90), 640.0 / 480.0, 1.0, 100.0);
-
+    
     DirectXUpdates(rgba_clear_colour);
 
-    g_pEnemy1->LookAtXZ(g_camera->GetXPos(), g_camera->GetZPos());
-    g_pEnemy1->MoveForward(0.001f);
+    float previousXPos = g_pPlayer->GetXPos();
+    float previousYPos = g_pPlayer->GetYPos();
+    float previousZPos = g_pPlayer->GetZPos();
+
+    g_pPlayer->SetXPos(g_camera->GetXPos());
+    g_pPlayer->SetYPos(g_camera->GetYPos());
+    g_pPlayer->SetZPos(g_camera->GetZPos());
+
+    if (g_pPlayer->CheckCollision(g_pEnemy1))
+    {
+        Collision();
+    }
+
+    else if (g_pPlayer->CheckCollision(g_pEnemy2))
+    {
+        Collision();
+    }
 
     DrawObjects(view, projection);
+}
+
+void Collision()
+{
+    g_pPlayer->SetXPos(0);
+    g_pPlayer->SetYPos(0);
+    g_pPlayer->SetZPos(-0.25);
+
+    g_camera->SetXPos(0);
+    g_camera->SetZPos(0);
+}
+
+void LastSafePosition(float previousXPos, float previousYPos, float previousZPos)
+{
+    g_pPlayer->SetXPos(previousXPos);
+    g_pPlayer->SetYPos(previousYPos);
+    g_pPlayer->SetZPos(previousZPos);
+
+    g_camera->SetXPos(previousXPos);
+    g_camera->SetYPos(previousYPos);
+    g_camera->SetZPos(previousZPos);
 }
 
 void DirectXUpdates(float  rgba_clear_colour[4])
