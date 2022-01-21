@@ -37,7 +37,8 @@ IDirectInput8* m_pDirectInput;
 IDirectInputDevice8* m_pKeyboardDevice;
 unsigned char m_keyboardKeyStates[256];
 
-float g_score;
+int g_score{0};
+std::string score{"SCORE"};
 
 Model* g_pPlayer;
 Model* g_pFloor;
@@ -57,7 +58,7 @@ HRESULT InitialiseD3D();
 void ShutdownD3D();
 void RenderFrame(void);
 void BindBoxToCamera();
-void DoCollision();
+void DoCollision(float previousXPos, float previousYPos, float previousZPos);
 void AfterCollision(Model& _model, Camera& _camera);
 void LastSafePosition(Model& _model, Camera& _camera, float previousXPos, float previousYPos, float previousZPos);
 void DirectXUpdates(float  rgba_clear_colour[4]);
@@ -298,8 +299,6 @@ HRESULT InitialiseD3D()
 
     g_pImmediateContext->RSSetViewports(1, &viewport);
 
-    g_2DText = new Text2D("assets/font1.png", g_pD3DDevice, g_pImmediateContext);
-
     D3D11_BLEND_DESC b;
     b.RenderTarget[0].BlendEnable = TRUE;
     b.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
@@ -313,6 +312,10 @@ HRESULT InitialiseD3D()
     b.AlphaToCoverageEnable = FALSE;
 
     g_pD3DDevice->CreateBlendState(&b, &g_pAlphaBlendEnable);
+
+    b.RenderTarget[0].BlendEnable = FALSE;
+
+    g_pD3DDevice->CreateBlendState(&b, &g_pAlphaBlendDisable);
 
     D3D11_RASTERIZER_DESC rdesc;
     ZeroMemory(&rdesc, sizeof(D3D11_RASTERIZER_DESC));
@@ -348,7 +351,9 @@ HRESULT InitialiseGraphics()
 {
     HRESULT hr = S_OK;
 
-    g_camera = new Camera(0.0f, 0.0f, 0.0f, 0.0f);
+    g_camera = new Camera(-5.0f, 0.0f, 1.0f, 0.0f);
+
+    g_2DText = new Text2D("assets/font1.png", g_pD3DDevice, g_pImmediateContext);
 
     g_pPlayer = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
     g_pPlayer->InitObjModel();
@@ -374,14 +379,12 @@ HRESULT InitialiseGraphics()
     g_pEnemy3 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
     g_pEnemy3->AddTexture((char*)"assets/BoxTexture.bmp");
     g_pEnemy3->InitObjModel();
-    g_pEnemy3->SetXPos(5);
+    g_pEnemy3->SetXPos(-15);
     g_pEnemy3->SetZPos(-30);
 
     g_pEnemy4 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
     g_pEnemy4->AddTexture((char*)"assets/BoxTexture.bmp");
     g_pEnemy4->InitObjModel();
-    g_pEnemy4->SetXPos(15);
-    g_pEnemy4->SetZPos(-5);
 
     g_pCoin1 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
     g_pCoin1->InitObjModel();
@@ -431,6 +434,10 @@ void ShutdownD3D()
 
 void RenderFrame(void)
 {
+    float previousXPos = g_pPlayer->GetXPos();
+    float previousYPos = g_pPlayer->GetYPos();
+    float previousZPos = g_pPlayer->GetZPos();
+
     float rgba_clear_colour[4] = { 0.1f, 0.2f, 0.6f, 1.0f };
     XMMATRIX world, view, projection;
     view = g_camera->GetViewMatrix();
@@ -439,16 +446,17 @@ void RenderFrame(void)
     DirectXUpdates(rgba_clear_colour);
     BindBoxToCamera();
 
-    DoCollision();
+    g_pEnemy3->LookAtXZ(g_pEnemy4->GetXPos(), g_pEnemy4->GetYPos());
+    g_pEnemy3->MoveForward(0.001f);
+    g_pEnemy4->MoveForward(0.001f);
+    g_pEnemy4->IncYAngle(0.05f);
+
+    DoCollision(previousXPos, previousYPos, previousZPos);
     DrawObjects(view, projection);
 }
 
 void BindBoxToCamera()
 {
-    float previousXPos = g_pPlayer->GetXPos();
-    float previousYPos = g_pPlayer->GetYPos();
-    float previousZPos = g_pPlayer->GetZPos();
-
     g_pPlayer->SetXPos(g_camera->GetXPos());
     g_pPlayer->SetYPos(g_camera->GetYPos());
     g_pPlayer->SetZPos(g_camera->GetZPos());
@@ -457,13 +465,21 @@ void BindBoxToCamera()
     g_pPlayer->SetZAngle(g_camera->GetZPos());
 }
 
-void DoCollision()
+void DoCollision(float previousXPos, float previousYPos, float previousZPos)
 {
-    if (g_pPlayer->CheckCollision(g_pEnemy1)) { AfterCollision(*g_pPlayer, *g_camera); }
+    if (g_pPlayer->CheckCollision(g_pFloor)) { LastSafePosition(*g_pPlayer, *g_camera, previousXPos, previousYPos, previousZPos); }
+    else if (g_pPlayer->CheckCollision(g_pEnemy1)) { AfterCollision(*g_pPlayer, *g_camera); }
+    else if (g_pEnemy2->CheckCollision(g_pPlayer)) { g_pEnemy2->MoveForward(-0.01f); }
+    //else if (g_pPlayer->CheckCollision(g_pEnemy3)) { AfterCollision(*g_pPlayer, *g_camera); }
+    //else if (g_pPlayer->CheckCollision(g_pEnemy4)) { AfterCollision(*g_pPlayer, *g_camera); }
 
-    else if (g_pEnemy2->CheckCollision(g_pPlayer)) { g_pEnemy2->MoveForward(-0.005); }
+    //if (g_pEnemy1->CheckCollision(g_pEnemy3)) { AfterCollision(*g_pPlayer, *g_camera); }
+    //else if (g_pPlayer->CheckCollision(g_pEnemy3)) { AfterCollision(*g_pPlayer, *g_camera); }
+    //else if (g_pPlayer->CheckCollision(g_pEnemy4)) { AfterCollision(*g_pPlayer, *g_camera); }
 
     //else if (g_pPlayer->CheckCollision(g_pCoin1)) { nullptr != g_pCoin1; g_pCoin1 = nullptr; ++g_score; }
+    //else if (g_pPlayer->CheckCollision(g_pCoin2)) { nullptr != g_pCoin2; g_pCoin2 = nullptr; ++g_score; }
+    //else if (g_pPlayer->CheckCollision(g_pCoin3)) { nullptr != g_pCoin3; g_pCoin3 = nullptr; ++g_score; }
 }
 
 void AfterCollision(Model& _model, Camera& _camera)
@@ -501,14 +517,18 @@ void DirectXUpdates(float  rgba_clear_colour[4])
     g_pImmediateContext->OMSetDepthStencilState(g_pDepthStateTrue, 1);
     g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, rgba_clear_colour);
     g_pImmediateContext->ClearDepthStencilView(g_pZBuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-    g_pImmediateContext->OMSetBlendState(g_pAlphaBlendEnable, 0, 0xffffffff);
-    g_2DText->AddText("Some Text", -1.0, +1.0, .2);
-    g_pImmediateContext->OMSetBlendState(g_pAlphaBlendDisable, 0, 0xffffffff);
-    g_pImmediateContext->RSSetState(rastStateCullBack);
+
 }
 
 void DrawObjects(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection)
 {
+
+    //g_pImmediateContext->OMSetBlendState(g_pAlphaBlendEnable, 0, 0xffffffff);
+    g_2DText->AddText(score, -1.0, +1.0, .15);
+    g_2DText->RenderText();
+    //g_pImmediateContext->OMSetBlendState(g_pAlphaBlendDisable, 0, 0xffffffff);
+
+    g_pImmediateContext->RSSetState(rastStateCullBack);
     g_pFloor->Draw(&view, &projection);
     g_pEnemy1->Draw(&view, &projection);
     g_pEnemy2->Draw(&view, &projection);
@@ -518,7 +538,8 @@ void DrawObjects(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection)
     g_pCoin2->Draw(&view, &projection);
     g_pCoin3->Draw(&view, &projection);
     g_pImmediateContext->RSSetState(rastStateCullNone);
-    g_2DText->RenderText();
+
+
     g_pSwapChain->Present(0, 0);
 }
 
