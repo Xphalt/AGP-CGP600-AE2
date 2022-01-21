@@ -260,22 +260,27 @@ void Model::CalculateModelCentrePoint()
 		{
 			minx = m_pObject->vertices[i].Pos.x;
 		}
+
 		else if (m_pObject->vertices[i].Pos.x > maxx)
 		{
 			maxx = m_pObject->vertices[i].Pos.x;
 		}
+
 		if (m_pObject->vertices[i].Pos.y < miny)
 		{
 			miny = m_pObject->vertices[i].Pos.y;
 		}
+
 		else if (m_pObject->vertices[i].Pos.y > maxy)
 		{
 			maxy = m_pObject->vertices[i].Pos.y;
 		}
+
 		if (m_pObject->vertices[i].Pos.z < minz)
 		{
 			minz = m_pObject->vertices[i].Pos.z;
 		}
+
 		else if (m_pObject->vertices[i].Pos.z > maxz)
 		{
 			maxz = m_pObject->vertices[i].Pos.z;
@@ -291,9 +296,11 @@ void Model::CalculateModelCentrePoint()
 void Model::CalculateBoundingSphereRadius()
 {
 	float maxDist = 0, checkDist;
+
 	for (int i = 0; i < m_pObject->numverts; i++)
 	{
 		checkDist = sqrt(powf((m_boundingSphereCentreX - m_pObject->vertices[i].Pos.x), 2) + powf((m_boundingSphereCentreY - m_pObject->vertices[i].Pos.y), 2) + powf((m_boundingSphereCentreZ - m_pObject->vertices[i].Pos.z), 2));
+		
 		if (checkDist >= maxDist)	maxDist = checkDist;
 	}
 
@@ -302,7 +309,7 @@ void Model::CalculateBoundingSphereRadius()
 
 bool Model::CheckCollision(Model* model)
 {
-	if (model == this)	return false;
+	if (model == this) { return false; }
 
 	float x1 = XMVectorGetX(model->GetBoundingSphereWorldSpacePosition());
 	float y1 = XMVectorGetY(model->GetBoundingSphereWorldSpacePosition());
@@ -314,14 +321,8 @@ bool Model::CheckCollision(Model* model)
 	float distance_squared = (powf((x1 - x2), 2.0f) + powf((y1 - y2), 2.0f) + powf((z1 - z2), 2.0f));
 	float radii_squared = powf((model->GetBoundingSphereRadius()) + (this->GetBoundingSphereRadius()), 2.0f);
 
-	if (distance_squared < radii_squared)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	if (distance_squared < radii_squared) { return true; }
+	else { return false; }
 }
 
 void Model::LookAtXZ(float x, float z)
@@ -336,5 +337,4 @@ void Model::MoveForward(float distance)
 {
 	m_x += sin(m_yAngle * (XM_PI / 180.0)) * distance;
 	m_z += cos(m_yAngle * (XM_PI / 180.0)) * distance;
-
 }

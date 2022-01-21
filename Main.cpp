@@ -37,10 +37,17 @@ IDirectInput8* m_pDirectInput;
 IDirectInputDevice8* m_pKeyboardDevice;
 unsigned char m_keyboardKeyStates[256];
 
+float g_score;
+
 Model* g_pPlayer;
 Model* g_pFloor;
 Model* g_pEnemy1;
 Model* g_pEnemy2;
+Model* g_pEnemy3;
+Model* g_pEnemy4;
+Model* g_pCoin1;
+Model* g_pCoin2;
+Model* g_pCoin3;
 #pragma endregion
 
 #pragma region ForwardDeclarations
@@ -49,8 +56,10 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT InitialiseD3D();
 void ShutdownD3D();
 void RenderFrame(void);
-void Collision();
-void LastSafePosition(float previousXPos, float previousYPos, float previousZPos);
+void BindBoxToCamera();
+void DoCollision();
+void AfterCollision(Model& _model, Camera& _camera);
+void LastSafePosition(Model& _model, Camera& _camera, float previousXPos, float previousYPos, float previousZPos);
 void DirectXUpdates(float  rgba_clear_colour[4]);
 void DrawObjects(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection);
 HRESULT InitialiseGraphics(void);
@@ -343,36 +352,70 @@ HRESULT InitialiseGraphics()
 
     g_pPlayer = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
     g_pPlayer->InitObjModel();
-    g_pPlayer->SetScale(1);
 
     g_pFloor = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
+    g_pFloor->AddTexture((char*)"assets/BoxTexture.bmp");
     g_pFloor->InitObjModel();
-    g_pFloor->SetScale(5);
-    g_pFloor->SetYPos(-10);
+    g_pFloor->SetScale(50);
+    g_pFloor->SetYPos(-51);
 
-    g_pEnemy1 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
+    g_pEnemy1 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
     g_pEnemy1->AddTexture((char*)"assets/BoxTexture.bmp");
     g_pEnemy1->InitObjModel();
-    g_pPlayer->SetScale(0.5);
     g_pEnemy1->SetXPos(-5);
+    g_pEnemy1->SetXPos(-15);
 
-    g_pEnemy2 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
+    g_pEnemy2 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
     g_pEnemy2->AddTexture((char*)"assets/BoxTexture.bmp");
     g_pEnemy2->InitObjModel();
-    g_pEnemy2->SetScale(0.5);
     g_pEnemy2->SetXPos(5);
+    g_pEnemy2->SetZPos(15);
+
+    g_pEnemy3 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
+    g_pEnemy3->AddTexture((char*)"assets/BoxTexture.bmp");
+    g_pEnemy3->InitObjModel();
+    g_pEnemy3->SetXPos(5);
+    g_pEnemy3->SetZPos(-30);
+
+    g_pEnemy4 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/cube.obj");
+    g_pEnemy4->AddTexture((char*)"assets/BoxTexture.bmp");
+    g_pEnemy4->InitObjModel();
+    g_pEnemy4->SetXPos(15);
+    g_pEnemy4->SetZPos(-5);
+
+    g_pCoin1 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
+    g_pCoin1->InitObjModel();
+    g_pCoin1->SetScale(0.5f);
+    g_pCoin1->SetZPos(-20);
+    g_pCoin1->SetZPos(-20);
+
+    g_pCoin2 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
+    g_pCoin2->InitObjModel();
+    g_pCoin2->SetScale(0.5f);
+    g_pCoin2->SetXPos(-15);
+    g_pCoin2->SetZPos(15);
+
+    g_pCoin3 = new Model(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Sphere.obj");
+    g_pCoin3->InitObjModel();
+    g_pCoin3->SetScale(0.5f);
+    g_pCoin3->SetZPos(10);
 
     return hr;
 }
 
 void ShutdownD3D()
 {
-    if (g_pEnemy2) { delete g_pEnemy2; }
-    if (g_pEnemy1) { delete g_pEnemy1; }
-    if (g_pFloor) { delete g_pFloor; }
-    if (g_pPlayer) { delete g_pPlayer; }
-    if (g_camera) { delete g_camera; }
-    if (g_2DText) { delete g_2DText; };
+    if (nullptr != g_pCoin3) { delete g_pCoin3; g_pCoin3 = { nullptr }; }
+    if (nullptr != g_pCoin2) { delete g_pCoin2; g_pCoin2 = { nullptr }; }
+    if (nullptr != g_pCoin1) { delete g_pCoin1; g_pCoin1 = { nullptr }; }
+    if (nullptr != g_pEnemy4) { delete g_pEnemy4;  g_pEnemy4 = { nullptr }; }
+    if (nullptr != g_pEnemy3) { delete g_pEnemy3;  g_pEnemy3 = { nullptr }; }
+    if (nullptr != g_pEnemy2) { delete g_pEnemy2;  g_pEnemy2 = { nullptr }; }
+    if (nullptr != g_pEnemy1) { delete g_pEnemy1; g_pEnemy1 = { nullptr }; }
+    if (nullptr != g_pFloor) { delete g_pFloor; g_pFloor = { nullptr }; }
+    if (nullptr != g_pPlayer) { delete g_pPlayer; g_pPlayer = { nullptr }; }
+    if (nullptr != g_camera) { delete g_camera; g_camera = { nullptr }; }
+    if (nullptr != g_2DText) { delete g_2DText; g_2DText = { nullptr }; };
     if (rastStateCullBack) { rastStateCullBack->Release(); }
     if (rastStateCullNone) { rastStateCullNone->Release(); }
     if (g_pAlphaBlendDisable) { g_pAlphaBlendDisable->Release(); }
@@ -394,7 +437,14 @@ void RenderFrame(void)
     projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(90), 640.0 / 480.0, 1.0, 100.0);
     
     DirectXUpdates(rgba_clear_colour);
+    BindBoxToCamera();
 
+    DoCollision();
+    DrawObjects(view, projection);
+}
+
+void BindBoxToCamera()
+{
     float previousXPos = g_pPlayer->GetXPos();
     float previousYPos = g_pPlayer->GetYPos();
     float previousZPos = g_pPlayer->GetZPos();
@@ -402,39 +452,48 @@ void RenderFrame(void)
     g_pPlayer->SetXPos(g_camera->GetXPos());
     g_pPlayer->SetYPos(g_camera->GetYPos());
     g_pPlayer->SetZPos(g_camera->GetZPos());
-
-    if (g_pPlayer->CheckCollision(g_pEnemy1))
-    {
-        Collision();
-    }
-
-    else if (g_pPlayer->CheckCollision(g_pEnemy2))
-    {
-        Collision();
-    }
-
-    DrawObjects(view, projection);
+    g_pPlayer->SetXAngle(g_camera->GetXPos());
+    g_pPlayer->SetYAngle(g_camera->GetYPos());
+    g_pPlayer->SetZAngle(g_camera->GetZPos());
 }
 
-void Collision()
+void DoCollision()
 {
-    g_pPlayer->SetXPos(0);
-    g_pPlayer->SetYPos(0);
-    g_pPlayer->SetZPos(-0.25);
+    if (g_pPlayer->CheckCollision(g_pEnemy1)) { AfterCollision(*g_pPlayer, *g_camera); }
 
-    g_camera->SetXPos(0);
-    g_camera->SetZPos(0);
+    else if (g_pEnemy2->CheckCollision(g_pPlayer)) { g_pEnemy2->MoveForward(-0.005); }
+
+    //else if (g_pPlayer->CheckCollision(g_pCoin1)) { nullptr != g_pCoin1; g_pCoin1 = nullptr; ++g_score; }
 }
 
-void LastSafePosition(float previousXPos, float previousYPos, float previousZPos)
+void AfterCollision(Model& _model, Camera& _camera)
 {
-    g_pPlayer->SetXPos(previousXPos);
-    g_pPlayer->SetYPos(previousYPos);
-    g_pPlayer->SetZPos(previousZPos);
+    _model.SetXPos(0.0f);
+    _model.SetYPos(0.0f);
+    _model.SetZPos(-.005f);
 
-    g_camera->SetXPos(previousXPos);
-    g_camera->SetYPos(previousYPos);
-    g_camera->SetZPos(previousZPos);
+    _model.SetXAngle(0.0f);
+    _model.SetYAngle(0.0f);
+    _model.SetZAngle(0.0f);
+
+    _camera.SetXPos(0.0f);
+    _camera.SetYPos(0.0f);
+    _camera.SetZPos(-0.0f);
+
+    _camera.SetXAngle(0.0f);
+    _camera.SetYAngle(0.0f);
+    _camera.SetZAngle(0.0f);
+}
+
+void LastSafePosition(Model& _model, Camera& _camera, float previousXPos, float previousYPos, float previousZPos)
+{
+    _model.SetXPos(previousXPos);
+    _model.SetYPos(previousYPos);
+    _model.SetZPos(previousZPos);
+
+    _camera.SetXPos(previousXPos);
+    _camera.SetYPos(previousYPos);
+    _camera.SetZPos(previousZPos);
 }
 
 void DirectXUpdates(float  rgba_clear_colour[4])
@@ -450,10 +509,14 @@ void DirectXUpdates(float  rgba_clear_colour[4])
 
 void DrawObjects(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection)
 {
-
     g_pFloor->Draw(&view, &projection);
     g_pEnemy1->Draw(&view, &projection);
     g_pEnemy2->Draw(&view, &projection);
+    g_pEnemy3->Draw(&view, &projection);
+    g_pEnemy4->Draw(&view, &projection);
+    g_pCoin1->Draw(&view, &projection);
+    g_pCoin2->Draw(&view, &projection);
+    g_pCoin3->Draw(&view, &projection);
     g_pImmediateContext->RSSetState(rastStateCullNone);
     g_2DText->RenderText();
     g_pSwapChain->Present(0, 0);
@@ -496,12 +559,8 @@ void ReadInputStates()
 void Input()
 {
     ReadInputStates();
-    if (IsKeyPressed(DIK_ESCAPE)) { DestroyWindow(g_hWnd); }
-    //if (IsKeyPressed(DIK_A)) { g_camera->Strafe(-0.001f); }
-    //if (IsKeyPressed(DIK_D)) { g_camera->Strafe(0.001f); }
-    //if (IsKeyPressed(DIK_W)) { g_camera->Forward(0.001f); }
-    //if (IsKeyPressed(DIK_S)) { g_camera->Forward(-0.001f); }
 
+    if (IsKeyPressed(DIK_ESCAPE)) { DestroyWindow(g_hWnd); }
     if (IsKeyPressed(DIK_A)) { g_camera->Strafe(0.0025f); }
     if (IsKeyPressed(DIK_D)) { g_camera->Strafe(-0.0025f); }
     if (IsKeyPressed(DIK_W)) { g_camera->Forward(0.1f); }

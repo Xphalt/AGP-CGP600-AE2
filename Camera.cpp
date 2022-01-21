@@ -64,3 +64,18 @@ void Camera::SetZPos(float _zPos)
 {
 	m_z = _zPos;
 }
+
+void Camera::SetXAngle(float _xAngle)
+{
+	m_xAngle = _xAngle;
+}
+
+void Camera::SetYAngle(float _yAngle)
+{
+	m_yAngle = _yAngle;
+}
+
+void Camera::SetZAngle(float _zAngle)
+{
+	m_zAngle = _zAngle;
+}

@@ -66,8 +66,8 @@ private:
 	XMVECTOR m_left;
 	XMVECTOR m_right;
 
-	float m_boundingSphereCentreX, m_boundingSphereCentreY, m_boundingSphereCentreZ;
+	float m_boundingSphereCentreX;
+	float m_boundingSphereCentreY;
+	float m_boundingSphereCentreZ;
 	float m_boundingSphereRadius;
-	
-
 };

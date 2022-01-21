@@ -13,6 +13,7 @@ class Camera
 private:
 	float m_x, m_y, m_z;
 	float m_dx, m_dy, m_dz;
+	float m_xAngle, m_yAngle, m_zAngle;
 	float m_cameraRotation;
 	XMVECTOR m_position, m_lookat, m_up;
 	float m_stepAmount;
@@ -29,8 +30,14 @@ public:
 	void SetXPos(float _xPos);
 	void SetYPos(float _yPos);
 	void SetZPos(float _zPos);
+	void SetXAngle(float _xAngle);
+	void SetYAngle(float _yAngle);
+	void SetZAngle(float _zAngle);
 
 	float GetXPos() const { return m_x; }
 	float GetYPos() const { return m_y; }
 	float GetZPos() const { return m_z; }
+	const float GetXAngle() { return m_xAngle; }
+	const float GetYAngle() { return m_yAngle; }
+	const float GetZAngle() { return m_zAngle; }
 };
